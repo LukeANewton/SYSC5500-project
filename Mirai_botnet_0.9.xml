@@ -1,0 +1,517 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE nta PUBLIC '-//Uppaal Team//DTD Flat System 1.1//EN' 'http://www.it.uu.se/research/group/darts/uppaal/flat-1_2.dtd'>
+<nta>
+	<declaration>//***********************************************************
+//Variables
+//***********************************************************
+urgent broadcast chan activate_first, new_victim, activate_new, activated, report, start_loader;
+broadcast chan setup, brute_force, load_binary;
+
+int[0,100] id = 0;
+int[0,100] victim_id = 0;
+int id_arr[100];
+int [0,100] i = 0;
+
+bool port_open = false;
+bool match_found = false;
+
+clock x, total_time;
+
+
+
+
+//***********************************************************
+//Functions
+//***********************************************************
+void GET_ID(){
+    victim_id:=id;
+}
+
+
+bool MATCH(int id){
+    match_found = false;
+    for (i=0; i&lt;100; i++){
+        if(id == id_arr[i]){
+            match_found = true;
+        }
+    }
+    return match_found;
+}
+
+void ADD_RECORD(int id){
+    for (i=0; i&lt;100; i++){
+        if(id_arr[i]==0){
+            id_arr[i] = id;
+            return;
+        }
+    }
+}
+
+bool RECORD_EXISTS(){
+    //EMPTY
+    if (match_found)
+        return true;
+    else
+        return false;
+}
+
+
+//***********************************************************
+//Gantt Color Codes
+//***********************************************************
+const int Color_Blue = 2;
+const int Color_LBlue = 18;
+const int Color_Cyan = 9;
+
+const int Color_Purple = 3;
+const int Color_DPurple = 20;
+
+const int Color_Green = 8;
+const int Color_LGreen = 24;
+
+const int Color_Red = 0;
+const int Color_Pink = 12;
+
+const int Color_Orange = 5;
+const int Color_LOrange = 14;
+const int Color_Yellow = 6;</declaration>
+	<template>
+		<name>Mirai_Master</name>
+		<location id="id0" x="-476" y="-119">
+			<name x="-493" y="-153">Initial</name>
+			<label kind="invariant" x="-493" y="-111">x&lt;=5</label>
+		</location>
+		<location id="id1" x="-331" y="-119">
+			<name x="-374" y="-153">Setup_Servers</name>
+		</location>
+		<init ref="id0"/>
+		<transition>
+			<source ref="id0"/>
+			<target ref="id1"/>
+			<label kind="guard" x="-425" y="-162">x&gt;=2</label>
+			<label kind="synchronisation" x="-425" y="-145">setup!</label>
+		</transition>
+	</template>
+	<template>
+		<name>CnC_Server</name>
+		<location id="id2" x="-1097" y="-229">
+			<name x="-1107" y="-263">Idle</name>
+		</location>
+		<location id="id3" x="-943" y="-229">
+			<name x="-978" y="-263">Pre_Active</name>
+		</location>
+		<location id="id4" x="-765" y="-229">
+			<name x="-782" y="-263">Active</name>
+		</location>
+		<location id="id5" x="-586" y="-323">
+			<name x="-620" y="-306">IM_Stage_1</name>
+			<committed/>
+		</location>
+		<location id="id6" x="-586" y="-136">
+			<name x="-620" y="-119">IM_Stage_2</name>
+		</location>
+		<init ref="id2"/>
+		<transition>
+			<source ref="id6"/>
+			<target ref="id4"/>
+			<label kind="synchronisation" x="-731" y="-178">activated?</label>
+		</transition>
+		<transition>
+			<source ref="id5"/>
+			<target ref="id6"/>
+			<label kind="synchronisation" x="-578" y="-229">activate_new!</label>
+		</transition>
+		<transition>
+			<source ref="id4"/>
+			<target ref="id5"/>
+			<label kind="synchronisation" x="-731" y="-306">new_victim?</label>
+		</transition>
+		<transition>
+			<source ref="id3"/>
+			<target ref="id4"/>
+			<label kind="synchronisation" x="-901" y="-254">activate_first!</label>
+		</transition>
+		<transition>
+			<source ref="id2"/>
+			<target ref="id3"/>
+			<label kind="synchronisation" x="-1046" y="-254">setup?</label>
+		</transition>
+	</template>
+	<template>
+		<name>ScanListen_Server</name>
+		<location id="id7" x="-781" y="-221">
+			<name x="-791" y="-255">Idle</name>
+		</location>
+		<location id="id8" x="-620" y="-221">
+			<name x="-636" y="-255">Wait</name>
+		</location>
+		<location id="id9" x="-467" y="-221">
+			<name x="-509" y="-255">New_Credentials</name>
+			<committed/>
+		</location>
+		<init ref="id7"/>
+		<transition>
+			<source ref="id9"/>
+			<target ref="id8"/>
+			<label kind="guard" x="-612" y="-323">!RECORD_EXISTS()</label>
+			<label kind="synchronisation" x="-586" y="-297">start_loader!</label>
+			<label kind="assignment" x="-629" y="-340">ADD_RECORD(victim_id)</label>
+			<nail x="-493" y="-297"/>
+			<nail x="-595" y="-297"/>
+		</transition>
+		<transition>
+			<source ref="id9"/>
+			<target ref="id8"/>
+			<label kind="guard" x="-612" y="-144">RECORD_EXISTS()</label>
+			<nail x="-493" y="-144"/>
+			<nail x="-595" y="-144"/>
+		</transition>
+		<transition>
+			<source ref="id8"/>
+			<target ref="id9"/>
+			<label kind="synchronisation" x="-569" y="-246">report?</label>
+			<label kind="assignment" x="-603" y="-221">MATCH(victim_id)</label>
+		</transition>
+		<transition>
+			<source ref="id7"/>
+			<target ref="id8"/>
+			<label kind="synchronisation" x="-722" y="-246">setup?</label>
+		</transition>
+	</template>
+	<template>
+		<name>Loader</name>
+		<declaration>clock loader_x;</declaration>
+		<location id="id10" x="127" y="-68">
+			<name x="101" y="-102">Loaded</name>
+			<committed/>
+		</location>
+		<location id="id11" x="-230" y="-68">
+			<name x="-256" y="-102">Standby</name>
+		</location>
+		<location id="id12" x="-51" y="-68">
+			<name x="-77" y="-102">Loading</name>
+			<label kind="invariant" x="-85" y="-60">loader_x&lt;=2</label>
+		</location>
+		<init ref="id11"/>
+		<transition>
+			<source ref="id10"/>
+			<target ref="id11"/>
+			<label kind="synchronisation" x="-85" y="0">new_victim!</label>
+			<nail x="127" y="25"/>
+			<nail x="-230" y="25"/>
+		</transition>
+		<transition>
+			<source ref="id12"/>
+			<target ref="id10"/>
+			<label kind="guard" x="-9" y="-110">loader_x&gt;=1</label>
+			<label kind="synchronisation" x="-9" y="-93">load_binary!</label>
+		</transition>
+		<transition>
+			<source ref="id11"/>
+			<target ref="id12"/>
+			<label kind="synchronisation" x="-187" y="-93">start_loader?</label>
+			<label kind="assignment" x="-187" y="-68">loader_x:=0</label>
+		</transition>
+	</template>
+	<template>
+		<name>Bot_First</name>
+		<declaration>clock x1;</declaration>
+		<location id="id13" x="-374" y="-34">
+			<name x="-400" y="-68">Inactive</name>
+		</location>
+		<location id="id14" x="-204" y="-34">
+			<name x="-221" y="-68">Active</name>
+			<urgent/>
+		</location>
+		<location id="id15" x="-59" y="-110">
+			<name x="-110" y="-144">Telnet_Port_Scan</name>
+			<label kind="invariant" x="-51" y="-102">x1&lt;=5</label>
+		</location>
+		<location id="id16" x="93" y="-110">
+			<name x="42" y="-144">Victim_Found</name>
+			<label kind="invariant" x="42" y="-102">x1&lt;=10</label>
+		</location>
+		<location id="id17" x="93" y="34">
+			<name x="42" y="42">Login_Successful</name>
+			<urgent/>
+		</location>
+		<location id="id18" x="-59" y="34">
+			<name x="-84" y="43">Reported</name>
+			<committed/>
+		</location>
+		<init ref="id13"/>
+		<transition>
+			<source ref="id16"/>
+			<target ref="id15"/>
+			<label kind="assignment" x="0" y="-178">x1:=0</label>
+			<nail x="93" y="-178"/>
+			<nail x="-59" y="-178"/>
+		</transition>
+		<transition>
+			<source ref="id18"/>
+			<target ref="id15"/>
+			<label kind="assignment" x="-51" y="-42">x1:=0</label>
+		</transition>
+		<transition>
+			<source ref="id17"/>
+			<target ref="id18"/>
+			<label kind="synchronisation" x="0" y="9">report!</label>
+		</transition>
+		<transition>
+			<source ref="id16"/>
+			<target ref="id17"/>
+			<label kind="guard" x="102" y="-84">x1&gt;0 &amp;&amp;
+port_open</label>
+			<label kind="synchronisation" x="102" y="-42">brute_force!</label>
+			<label kind="assignment" x="102" y="-17">GET_ID()</label>
+		</transition>
+		<transition>
+			<source ref="id15"/>
+			<target ref="id16"/>
+			<label kind="assignment" x="0" y="-110">x1:=0</label>
+		</transition>
+		<transition>
+			<source ref="id14"/>
+			<target ref="id15"/>
+			<label kind="assignment" x="-136" y="-68">x1:=0</label>
+		</transition>
+		<transition>
+			<source ref="id13"/>
+			<target ref="id14"/>
+			<label kind="synchronisation" x="-331" y="-59">activate_first?</label>
+		</transition>
+	</template>
+	<template>
+		<name>Bot1</name>
+		<declaration>clock x2;</declaration>
+		<location id="id19" x="-484" y="-93">
+			<name x="-518" y="-85">Login_Seccessful</name>
+		</location>
+		<location id="id20" x="-484" y="-263">
+			<name x="-518" y="-297">Victim_Found</name>
+			<label kind="invariant" x="-552" y="-255">x2&lt;=10</label>
+		</location>
+		<location id="id21" x="-1037" y="-178">
+			<name x="-1071" y="-169">Connected</name>
+		</location>
+		<location id="id22" x="-969" y="-93">
+			<name x="-1003" y="-84">Vulnerable</name>
+		</location>
+		<location id="id23" x="-739" y="-178">
+			<name x="-765" y="-212">Active</name>
+		</location>
+		<location id="id24" x="-654" y="-263">
+			<name x="-714" y="-297">Telnet_Port_Scan</name>
+			<label kind="invariant" x="-637" y="-255">x2&lt;=5</label>
+		</location>
+		<location id="id25" x="-654" y="-93">
+			<name x="-680" y="-85">Reported</name>
+			<committed/>
+		</location>
+		<location id="id26" x="-1037" y="-314">
+			<name x="-1062" y="-348">Inactive</name>
+			<label kind="invariant" x="-1079" y="-306">x2&lt;=5</label>
+		</location>
+		<location id="id27" x="-824" y="-93">
+			<name x="-858" y="-84">Compromised</name>
+		</location>
+		<init ref="id26"/>
+		<transition>
+			<source ref="id27"/>
+			<target ref="id23"/>
+			<label kind="synchronisation" x="-782" y="-136">activate_new?</label>
+		</transition>
+		<transition>
+			<source ref="id26"/>
+			<target ref="id21"/>
+			<label kind="assignment" x="-1028" y="-263">port_open:=true,
+id:= 53</label>
+		</transition>
+		<transition>
+			<source ref="id20"/>
+			<target ref="id24"/>
+			<label kind="assignment" x="-586" y="-348">x2:=0</label>
+			<nail x="-484" y="-348"/>
+			<nail x="-654" y="-348"/>
+		</transition>
+		<transition>
+			<source ref="id25"/>
+			<target ref="id24"/>
+			<label kind="assignment" x="-646" y="-187">x2:=0</label>
+		</transition>
+		<transition>
+			<source ref="id19"/>
+			<target ref="id25"/>
+			<label kind="synchronisation" x="-586" y="-119">report!</label>
+		</transition>
+		<transition>
+			<source ref="id20"/>
+			<target ref="id19"/>
+			<label kind="guard" x="-476" y="-229">x2&gt;0 &amp;&amp;
+port_open</label>
+			<label kind="synchronisation" x="-476" y="-187">brute_force!</label>
+			<label kind="assignment" x="-476" y="-161">GET_ID()</label>
+		</transition>
+		<transition>
+			<source ref="id24"/>
+			<target ref="id20"/>
+			<label kind="assignment" x="-595" y="-263">x2:=0</label>
+		</transition>
+		<transition>
+			<source ref="id23"/>
+			<target ref="id24"/>
+			<label kind="synchronisation" x="-756" y="-238">activated!</label>
+			<label kind="assignment" x="-705" y="-212">x2:=0</label>
+		</transition>
+		<transition>
+			<source ref="id22"/>
+			<target ref="id27"/>
+			<label kind="synchronisation" x="-935" y="-119">load_binary?</label>
+		</transition>
+		<transition>
+			<source ref="id21"/>
+			<target ref="id22"/>
+			<label kind="synchronisation" x="-1088" y="-136">brute_force?</label>
+		</transition>
+	</template>
+	<template>
+		<name>Bot2</name>
+		<declaration>clock x2;</declaration>
+		<location id="id28" x="-425" y="-59">
+			<name x="-476" y="-51">Login_Seccessful</name>
+		</location>
+		<location id="id29" x="-425" y="-229">
+			<name x="-459" y="-263">Victim_Found</name>
+			<label kind="invariant" x="-493" y="-221">x2&lt;=10</label>
+		</location>
+		<location id="id30" x="-978" y="-144">
+			<name x="-1012" y="-135">Connected</name>
+		</location>
+		<location id="id31" x="-910" y="-59">
+			<name x="-944" y="-50">Vulnerable</name>
+		</location>
+		<location id="id32" x="-680" y="-144">
+			<name x="-706" y="-178">Active</name>
+		</location>
+		<location id="id33" x="-595" y="-229">
+			<name x="-655" y="-263">Telnet_Port_Scan</name>
+			<label kind="invariant" x="-578" y="-221">x2&lt;=5</label>
+		</location>
+		<location id="id34" x="-595" y="-59">
+			<name x="-621" y="-51">Reported</name>
+		</location>
+		<location id="id35" x="-978" y="-280">
+			<name x="-1003" y="-314">Inactive</name>
+			<label kind="invariant" x="-1020" y="-272">x2&lt;=5</label>
+		</location>
+		<location id="id36" x="-765" y="-59">
+			<name x="-799" y="-50">Compromised</name>
+		</location>
+		<init ref="id35"/>
+		<transition>
+			<source ref="id36"/>
+			<target ref="id32"/>
+			<label kind="synchronisation" x="-723" y="-102">activate_new?</label>
+		</transition>
+		<transition>
+			<source ref="id35"/>
+			<target ref="id30"/>
+		</transition>
+		<transition>
+			<source ref="id29"/>
+			<target ref="id33"/>
+			<label kind="assignment" x="-527" y="-314">x2:=0</label>
+			<nail x="-425" y="-314"/>
+			<nail x="-595" y="-314"/>
+		</transition>
+		<transition>
+			<source ref="id34"/>
+			<target ref="id33"/>
+			<label kind="assignment" x="-587" y="-153">x2:=0</label>
+		</transition>
+		<transition>
+			<source ref="id28"/>
+			<target ref="id34"/>
+			<label kind="synchronisation" x="-527" y="-85">report!</label>
+		</transition>
+		<transition>
+			<source ref="id29"/>
+			<target ref="id28"/>
+			<label kind="guard" x="-417" y="-170">x2&gt;0</label>
+			<label kind="synchronisation" x="-417" y="-153">brute_force!</label>
+		</transition>
+		<transition>
+			<source ref="id33"/>
+			<target ref="id29"/>
+			<label kind="assignment" x="-536" y="-229">x2:=0</label>
+		</transition>
+		<transition>
+			<source ref="id32"/>
+			<target ref="id33"/>
+			<label kind="synchronisation" x="-697" y="-204">activated!</label>
+			<label kind="assignment" x="-646" y="-178">x2:=0</label>
+		</transition>
+		<transition>
+			<source ref="id31"/>
+			<target ref="id36"/>
+			<label kind="synchronisation" x="-876" y="-85">load_binary?</label>
+		</transition>
+		<transition>
+			<source ref="id30"/>
+			<target ref="id31"/>
+			<label kind="synchronisation" x="-1029" y="-102">brute_force?</label>
+		</transition>
+	</template>
+	<system>// Place template instantiations here.
+MIRAI = Mirai_Master();
+CNC_SRV = CnC_Server();
+SCAN_SRV = ScanListen_Server();
+
+LDR = Loader();
+
+BOT_F = Bot_First();
+BOT_1 = Bot1();
+//BOT_2 = Bot2();
+
+
+// List one or more processes to be composed into a system.
+system MIRAI, CNC_SRV, SCAN_SRV, LDR, BOT_F, BOT_1;
+    
+
+
+//************************************************
+//Gantt Chart
+//************************************************
+
+gantt {
+
+//=====================AGENTS=====================
+    //Storage Agent
+//    S_Empty:     S.Empty -&gt; Color_Cyan;
+    
+//=====================SERVERS=====================
+    CnC_Server_Active:     CNC_SRV.Active -&gt; Color_Blue;
+    Scan_Server_Active:    SCAN_SRV.Wait -&gt; Color_Blue;  
+    Loading_Binary:        LDR.Loading -&gt; Color_Purple;
+
+//=====================BOTs=====================
+    
+//    BOT2_Connected:        BOT_2.Connected -&gt; Color_LBlue;
+
+    BOT_DF_Scan:        BOT_F.Telnet_Port_Scan -&gt; Color_LOrange;
+    BOT_DF_Attacking:   BOT_F.Victim_Found -&gt; Color_Red; 
+
+    BOT1_Connected_Safe:        BOT_1.Connected -&gt; Color_Green;
+    BOT1_Scan:             BOT_1.Telnet_Port_Scan -&gt; Color_LOrange;
+    BOT1_Attacking:        BOT_1.Victim_Found -&gt; Color_Red; 
+
+//    BOT2_Scan:             BOT_2.Telnet_Port_Scan -&gt; Color_Orange;    
+//    BOT2_Attacking:        BOT_2.Victim_Found -&gt; Color_Red; 
+}</system>
+	<queries>
+		<query>
+			<formula></formula>
+			<comment></comment>
+		</query>
+	</queries>
+</nta>
