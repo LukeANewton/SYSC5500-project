@@ -15,8 +15,6 @@ int[0,100] victim_id = 0;
 int id_arr[100];
 int [0,100] i = 0;
 
-
-bool port_open = false;
 bool match_found = false;
 
 clock x, total_time;
@@ -287,6 +285,7 @@ current_number_bots += 1</label>
 	</template>
 	<template>
 		<name>Bot1</name>
+		<parameter>const int id</parameter>
 		<declaration>clock x2;</declaration>
 		<location id="id19" x="-484" y="-93">
 			<name x="-518" y="-85">Login_Seccessful</name>
@@ -328,7 +327,6 @@ current_number_bots += 1</label>
 		<transition>
 			<source ref="id26"/>
 			<target ref="id21"/>
-			<label kind="assignment" x="-1028" y="-263">id:= 53</label>
 		</transition>
 		<transition>
 			<source ref="id20"/>
@@ -472,7 +470,7 @@ SCAN_SRV = ScanListen_Server();
 LDR = Loader();
 
 BOT_F = Bot_First();
-BOT_1 = Bot1();
+BOT_1 = Bot1(53);
 //BOT_2 = Bot2();
 
 
@@ -513,7 +511,7 @@ gantt {
 	<queries>
 		<query>
 			<formula>A[] current_number_bots &lt;= total_devices</formula>
-			<comment></comment>
+			<comment>check that the counter for the number of bots never exceeds the total number of devices</comment>
 		</query>
 	</queries>
 </nta>
