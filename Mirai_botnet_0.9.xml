@@ -7,8 +7,10 @@
 urgent broadcast chan activate_first, new_victim, activate_new, activated, report, start_loader;
 broadcast chan setup, brute_force, load_binary;
 
-const int total_devices = 1; //the number of devices in the network
+const int total_devices = 2; //the number of devices in the network
 int current_number_bots = 0; //the number of infected devices at any given time
+typedef int[0, total_devices-1] bot_id_t;
+
 
 int[0,100] id = 0;
 int[0,100] victim_id = 0;
@@ -285,7 +287,7 @@ current_number_bots += 1</label>
 	</template>
 	<template>
 		<name>Bot1</name>
-		<parameter>const int id</parameter>
+		<parameter>const bot_id_t id</parameter>
 		<declaration>clock x2;</declaration>
 		<location id="id19" x="-484" y="-93">
 			<name x="-518" y="-85">Login_Seccessful</name>
@@ -470,12 +472,11 @@ SCAN_SRV = ScanListen_Server();
 LDR = Loader();
 
 BOT_F = Bot_First();
-BOT_1 = Bot1(53);
 //BOT_2 = Bot2();
 
 
 // List one or more processes to be composed into a system.
-system MIRAI, CNC_SRV, SCAN_SRV, LDR, BOT_F, BOT_1;
+system MIRAI, CNC_SRV, SCAN_SRV, LDR, BOT_F, Bot1;
     
 
 
@@ -501,9 +502,10 @@ gantt {
     BOT_DF_Scan:        BOT_F.Telnet_Port_Scan -&gt; Color_LOrange;
     BOT_DF_Attacking:   BOT_F.Victim_Found -&gt; Color_Red; 
 
-    BOT1_Connected_Safe:        BOT_1.Connected -&gt; Color_Green;
-    BOT1_Scan:             BOT_1.Telnet_Port_Scan -&gt; Color_LOrange;
-    BOT1_Attacking:        BOT_1.Victim_Found -&gt; Color_Red; 
+    Bot1(j:bot_id_t):
+          Bot1(j).Connected -&gt; Color_Green,
+          Bot1(j).Telnet_Port_Scan -&gt; Color_LOrange,
+          Bot1(j).Victim_Found -&gt; Color_Red; 
 
 //    BOT2_Scan:             BOT_2.Telnet_Port_Scan -&gt; Color_Orange;    
 //    BOT2_Attacking:        BOT_2.Victim_Found -&gt; Color_Red; 
