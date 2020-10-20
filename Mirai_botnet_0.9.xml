@@ -7,7 +7,9 @@
 urgent broadcast chan activate_first, new_victim, activate_new, activated, report, start_loader;
 broadcast chan setup;
 
-const int total_devices = 3;                     //the number of devices in the network
+const int total_devices = 2;                     //the number of devices in the network
+const int timeout = 30;                          //the maximum amount of time to wait for a login response
+
 int current_number_bots = 0;                     //the number of infected devices at any given time
 typedef int[0, total_devices-1] bot_id_t;        //possible values for bot ids
 typedef int[1, 10] credentials_t;                //possible values for credentials
@@ -220,24 +222,32 @@ void send_credential(credentials_t c){
 		</location>
 		<location id="id16" x="17" y="-347">
 			<name x="-26" y="-382">Victim_Found</name>
-			<label kind="invariant" x="25" y="-340">x1&lt;=10</label>
+			<label kind="invariant" x="8" y="-331">x1&lt;=timeout</label>
 		</location>
 		<location id="id17" x="-348" y="-347">
 			<name x="-408" y="-381">Telnet_Port_Scan</name>
-			<label kind="invariant" x="-331" y="-339">x1&lt;=5</label>
+			<label kind="invariant" x="-323" y="-340">x1&lt;=5</label>
 		</location>
 		<location id="id18" x="281" y="-347">
 			<name x="230" y="-339">Attack_Attempted</name>
 		</location>
-		<location id="id19" x="-51" y="-42">
-			<name x="-110" y="-25">Attack_Successful</name>
+		<location id="id19" x="-51" y="-153">
+			<name x="-110" y="-136">Attack_Successful</name>
 			<committed/>
 		</location>
-		<location id="id20" x="-348" y="-42">
-			<name x="-374" y="-25">Reported</name>
+		<location id="id20" x="-348" y="-153">
+			<name x="-374" y="-136">Reported</name>
 			<committed/>
 		</location>
 		<init ref="id13"/>
+		<transition>
+			<source ref="id16"/>
+			<target ref="id17"/>
+			<label kind="guard" x="-195" y="-263">x1&gt;timeout</label>
+			<label kind="assignment" x="-195" y="-238">x1:=0</label>
+			<nail x="-102" y="-238"/>
+			<nail x="-255" y="-238"/>
+		</transition>
 		<transition>
 			<source ref="id17"/>
 			<target ref="id16"/>
@@ -265,9 +275,9 @@ target=t</label>
 		<transition>
 			<source ref="id15"/>
 			<target ref="id17"/>
-			<label kind="guard" x="-110" y="-627">attack_attempts&gt;10</label>
-			<nail x="281" y="-602"/>
-			<nail x="-348" y="-602"/>
+			<label kind="guard" x="-110" y="-586">attack_attempts&gt;10</label>
+			<nail x="281" y="-561"/>
+			<nail x="-348" y="-561"/>
 		</transition>
 		<transition>
 			<source ref="id18"/>
@@ -278,17 +288,16 @@ target=t</label>
 		<transition>
 			<source ref="id16"/>
 			<target ref="id18"/>
-			<label kind="select" x="110" y="-399">c:credentials_t</label>
-			<label kind="guard" x="144" y="-365">x1&gt;0</label>
-			<label kind="synchronisation" x="85" y="-382">dictionary_attack[target]!</label>
+			<label kind="select" x="119" y="-391">c:credentials_t</label>
+			<label kind="synchronisation" x="85" y="-374">dictionary_attack[target]!</label>
 			<label kind="assignment" x="110" y="-348">send_credential(c)</label>
 		</transition>
 		<transition>
 			<source ref="id18"/>
 			<target ref="id19"/>
-			<label kind="synchronisation" x="94" y="-67">login_success[target]?</label>
-			<label kind="assignment" x="111" y="-41">victim_id:=target</label>
-			<nail x="281" y="-41"/>
+			<label kind="synchronisation" x="85" y="-178">login_success[target]?</label>
+			<label kind="assignment" x="102" y="-153">victim_id:=target</label>
+			<nail x="280" y="-153"/>
 		</transition>
 		<transition>
 			<source ref="id20"/>
@@ -298,7 +307,7 @@ target=t</label>
 		<transition>
 			<source ref="id19"/>
 			<target ref="id20"/>
-			<label kind="synchronisation" x="-221" y="-68">report!</label>
+			<label kind="synchronisation" x="-221" y="-178">report!</label>
 		</transition>
 	</template>
 	<template>
@@ -317,13 +326,13 @@ void send_credential(credentials_t c){
     attack_attempts += 1;
     credential_attempt[target] = c;
 }</declaration>
-		<location id="id21" x="-1641" y="-35">
-			<name x="-1700" y="-18">Attack_Successful</name>
+		<location id="id21" x="-1632" y="-161">
+			<name x="-1691" y="-144">Attack_Successful</name>
 			<committed/>
 		</location>
 		<location id="id22" x="-1573" y="-340">
 			<name x="-1616" y="-375">Victim_Found</name>
-			<label kind="invariant" x="-1565" y="-333">x2&lt;=10</label>
+			<label kind="invariant" x="-1572" y="-323">x2&lt;=timeout</label>
 		</location>
 		<location id="id23" x="-2840" y="-426">
 			<name x="-2874" y="-418">Connected</name>
@@ -336,56 +345,67 @@ void send_credential(credentials_t c){
 		</location>
 		<location id="id26" x="-1938" y="-340">
 			<name x="-1998" y="-374">Telnet_Port_Scan</name>
-			<label kind="invariant" x="-1921" y="-332">x2&lt;=5</label>
+			<label kind="invariant" x="-1921" y="-340">x2&lt;=5</label>
 		</location>
-		<location id="id27" x="-1938" y="-35">
-			<name x="-1964" y="-18">Reported</name>
-			<committed/>
+		<location id="id27" x="-2839" y="-578">
+			<name x="-2864" y="-612">Inactive</name>
+			<label kind="invariant" x="-2882" y="-569">x2&lt;=5</label>
 		</location>
-		<location id="id28" x="-2840" y="-580">
-			<name x="-2865" y="-614">Inactive</name>
-			<label kind="invariant" x="-2883" y="-571">x2&lt;=5</label>
-		</location>
-		<location id="id29" x="-2236" y="-341">
+		<location id="id28" x="-2236" y="-341">
 			<name x="-2279" y="-324">Compromised</name>
 		</location>
-		<location id="id30" x="-2627" y="-341">
+		<location id="id29" x="-2627" y="-341">
 			<name x="-2678" y="-324">Login_Attempted</name>
 			<label kind="invariant" x="-2618" y="-340">x2&lt;=5</label>
 		</location>
-		<location id="id31" x="-1309" y="-340">
+		<location id="id30" x="-1309" y="-340">
 			<name x="-1360" y="-332">Attack_Attempted</name>
 		</location>
-		<location id="id32" x="-1743" y="-341">
+		<location id="id31" x="-1743" y="-341">
 			<committed/>
 		</location>
-		<location id="id33" x="-1309" y="-476">
+		<location id="id32" x="-1309" y="-476">
 			<name x="-1352" y="-510">Attack_Failed</name>
 			<committed/>
 		</location>
-		<init ref="id28"/>
+		<init ref="id27"/>
 		<transition>
-			<source ref="id33"/>
+			<source ref="id21"/>
+			<target ref="id26"/>
+			<label kind="synchronisation" x="-1895" y="-187">report!</label>
+			<label kind="assignment" x="-1895" y="-161">x2:=0</label>
+			<nail x="-1938" y="-161"/>
+		</transition>
+		<transition>
+			<source ref="id22"/>
+			<target ref="id26"/>
+			<label kind="guard" x="-1768" y="-255">x2&gt;timeout</label>
+			<label kind="assignment" x="-1768" y="-229">x2:=0</label>
+			<nail x="-1649" y="-229"/>
+			<nail x="-1853" y="-229"/>
+		</transition>
+		<transition>
+			<source ref="id32"/>
 			<target ref="id22"/>
 			<label kind="guard" x="-1504" y="-501">attack_attempts&lt;=10</label>
 			<nail x="-1572" y="-476"/>
 		</transition>
 		<transition>
-			<source ref="id33"/>
+			<source ref="id32"/>
 			<target ref="id26"/>
-			<label kind="guard" x="-1700" y="-620">attack_attempts&gt;10</label>
-			<nail x="-1309" y="-595"/>
-			<nail x="-1938" y="-595"/>
+			<label kind="guard" x="-1683" y="-552">attack_attempts&gt;10</label>
+			<nail x="-1309" y="-527"/>
+			<nail x="-1938" y="-527"/>
 		</transition>
 		<transition>
-			<source ref="id31"/>
-			<target ref="id33"/>
+			<source ref="id30"/>
+			<target ref="id32"/>
 			<label kind="synchronisation" x="-1300" y="-416">login_failed[target]?</label>
 			<label kind="assignment" x="-1258" y="-399">x2:=0</label>
 		</transition>
 		<transition>
-			<source ref="id32"/>
-			<target ref="id32"/>
+			<source ref="id31"/>
+			<target ref="id31"/>
 			<label kind="select" x="-1769" y="-426">t:bot_id_t</label>
 			<label kind="guard" x="-1777" y="-452">target==id</label>
 			<label kind="assignment" x="-1769" y="-409">target:=t</label>
@@ -393,41 +413,40 @@ void send_credential(credentials_t c){
 			<nail x="-1811" y="-426"/>
 		</transition>
 		<transition>
-			<source ref="id32"/>
+			<source ref="id31"/>
 			<target ref="id22"/>
 			<label kind="guard" x="-1692" y="-367">target!=id</label>
 		</transition>
 		<transition>
 			<source ref="id26"/>
-			<target ref="id32"/>
+			<target ref="id31"/>
 			<label kind="select" x="-1862" y="-367">t:bot_id_t</label>
-			<label kind="assignment" x="-1862" y="-333">x2:=0,
+			<label kind="assignment" x="-1861" y="-340">x2:=0,
 attack_attempts:=0,
 target:=t</label>
 		</transition>
 		<transition>
 			<source ref="id22"/>
-			<target ref="id31"/>
-			<label kind="select" x="-1480" y="-392">c:credentials_t</label>
-			<label kind="guard" x="-1446" y="-358">x2&gt;0</label>
-			<label kind="synchronisation" x="-1505" y="-375">dictionary_attack[target]!</label>
+			<target ref="id30"/>
+			<label kind="select" x="-1470" y="-382">c:credentials_t</label>
+			<label kind="synchronisation" x="-1504" y="-365">dictionary_attack[target]!</label>
 			<label kind="assignment" x="-1480" y="-341">send_credential(c)</label>
 		</transition>
 		<transition>
-			<source ref="id31"/>
+			<source ref="id30"/>
 			<target ref="id21"/>
-			<label kind="synchronisation" x="-1496" y="-60">login_success[target]?</label>
-			<label kind="assignment" x="-1479" y="-34">victim_id:=target</label>
-			<nail x="-1309" y="-34"/>
+			<label kind="synchronisation" x="-1496" y="-187">login_success[target]?</label>
+			<label kind="assignment" x="-1479" y="-161">victim_id:=target</label>
+			<nail x="-1309" y="-161"/>
 		</transition>
 		<transition>
-			<source ref="id30"/>
+			<source ref="id29"/>
 			<target ref="id24"/>
 			<label kind="guard" x="-2559" y="-341">credential_match()</label>
 			<label kind="synchronisation" x="-2559" y="-367">login_success[id]!</label>
 		</transition>
 		<transition>
-			<source ref="id30"/>
+			<source ref="id29"/>
 			<target ref="id23"/>
 			<label kind="guard" x="-2797" y="-341">!credential_match()</label>
 			<label kind="synchronisation" x="-2797" y="-368">login_failed[id]!</label>
@@ -435,31 +454,21 @@ target:=t</label>
 		</transition>
 		<transition>
 			<source ref="id23"/>
-			<target ref="id30"/>
+			<target ref="id29"/>
 			<label kind="synchronisation" x="-2797" y="-452">dictionary_attack[id]?</label>
 			<label kind="assignment" x="-2745" y="-425">x2:=0</label>
 			<nail x="-2627" y="-426"/>
 		</transition>
 		<transition>
-			<source ref="id29"/>
+			<source ref="id28"/>
 			<target ref="id25"/>
 			<label kind="synchronisation" x="-2211" y="-367">activate_new?</label>
 		</transition>
 		<transition>
-			<source ref="id28"/>
+			<source ref="id27"/>
 			<target ref="id23"/>
 			<label kind="select" x="-2832" y="-545">c:credentials_t</label>
 			<label kind="assignment" x="-2831" y="-520">credentials:=c</label>
-		</transition>
-		<transition>
-			<source ref="id27"/>
-			<target ref="id26"/>
-			<label kind="assignment" x="-1930" y="-205">x2:=0</label>
-		</transition>
-		<transition>
-			<source ref="id21"/>
-			<target ref="id27"/>
-			<label kind="synchronisation" x="-1811" y="-61">report!</label>
 		</transition>
 		<transition>
 			<source ref="id25"/>
@@ -469,7 +478,7 @@ target:=t</label>
 		</transition>
 		<transition>
 			<source ref="id24"/>
-			<target ref="id29"/>
+			<target ref="id28"/>
 			<label kind="synchronisation" x="-2363" y="-366">load_binary[id]?</label>
 		</transition>
 	</template>
