@@ -10,7 +10,7 @@ broadcast chan setup;
 const int total_devices = 2;                     //the number of devices in the network
 const int timeout = 30;                          //the maximum amount of time to wait for a login response
 
-int current_number_bots = 0;                     //the number of infected devices at any given time
+int[0, total_devices] current_number_bots = 0;                     //the number of infected devices at any given time
 typedef int[0, total_devices-1] bot_id_t;        //possible values for bot ids
 typedef int[1, 10] credentials_t;                //possible values for credentials
 
@@ -23,8 +23,7 @@ bot_id_t victim_id;                              //the id of the bot currently b
 bool in_botnet[total_devices];                   //the list of currently infected bot IDs (the index value is the device id and the value indicates if the device is in the botnet)
 credentials_t credential_attempt[total_devices]; //a list to represent passing credentials from attacking bot to device under attack
 
-int i;                                           //an integer to iterate over arrays
-clock x, total_time;
+clock total_time;
 
 
 
@@ -65,17 +64,17 @@ const int Color_Yellow = 6;</declaration>
 		<name>Mirai_Master</name>
 		<location id="id0" x="-476" y="-119">
 			<name x="-493" y="-153">Initial</name>
-			<label kind="invariant" x="-493" y="-111">x&lt;=5</label>
+			<label kind="invariant" x="-493" y="-111">total_time&lt;=5</label>
 		</location>
-		<location id="id1" x="-331" y="-119">
-			<name x="-374" y="-153">Setup_Servers</name>
+		<location id="id1" x="-289" y="-119">
+			<name x="-332" y="-153">Setup_Servers</name>
 		</location>
 		<init ref="id0"/>
 		<transition>
 			<source ref="id0"/>
 			<target ref="id1"/>
-			<label kind="guard" x="-425" y="-162">x&gt;=2</label>
-			<label kind="synchronisation" x="-425" y="-145">setup!</label>
+			<label kind="guard" x="-433" y="-161">total_time&gt;=2</label>
+			<label kind="synchronisation" x="-408" y="-144">setup!</label>
 		</transition>
 	</template>
 	<template>
@@ -516,21 +515,17 @@ gantt {
     BOT_DF_Scan:        BOT_F.Telnet_Port_Scan -&gt; Color_LOrange;
     BOT_DF_Attacking:   BOT_F.Victim_Found -&gt; Color_Red; 
 
-    Bot(j:bot_id_t):
-          Bot(j).Connected -&gt; Color_Green,
-          Bot(j).Telnet_Port_Scan -&gt; Color_LOrange,
-          Bot(j).Victim_Found -&gt; Color_Red,
-          Bot(j).Attack_Attempted -&gt; Color_Yellow; 
+    Bot(i:bot_id_t):
+          Bot(i).Connected -&gt; Color_Green,
+          Bot(i).Telnet_Port_Scan -&gt; Color_LOrange,
+          Bot(i).Victim_Found -&gt; Color_Red,
+          Bot(i).Attack_Attempted -&gt; Color_Yellow; 
 
 }</system>
 	<queries>
 		<query>
 			<formula>A[] !deadlock</formula>
 			<comment></comment>
-		</query>
-		<query>
-			<formula>A[] current_number_bots &lt;= total_devices</formula>
-			<comment>check that the counter for the number of bots never exceeds the total number of devices</comment>
 		</query>
 	</queries>
 </nta>
