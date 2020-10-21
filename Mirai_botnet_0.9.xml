@@ -242,7 +242,7 @@ void send_credential(credentials_t c){
 		<transition>
 			<source ref="id16"/>
 			<target ref="id17"/>
-			<label kind="guard" x="-195" y="-263">x1&gt;timeout</label>
+			<label kind="guard" x="-195" y="-263">x1&gt;=timeout</label>
 			<label kind="assignment" x="-195" y="-238">x1:=0</label>
 			<nail x="-102" y="-238"/>
 			<nail x="-255" y="-238"/>
@@ -378,7 +378,7 @@ void send_credential(credentials_t c){
 		<transition>
 			<source ref="id22"/>
 			<target ref="id26"/>
-			<label kind="guard" x="-1768" y="-255">x2&gt;timeout</label>
+			<label kind="guard" x="-1768" y="-255">x2&gt;=timeout</label>
 			<label kind="assignment" x="-1768" y="-229">x2:=0</label>
 			<nail x="-1649" y="-229"/>
 			<nail x="-1853" y="-229"/>
