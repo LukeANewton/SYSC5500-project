@@ -10,9 +10,9 @@ broadcast chan setup;
 const int total_devices = 2;                     //the number of devices in the network
 const int timeout = 30;                          //the maximum amount of time to wait for a login response
 
-int[0, total_devices] current_number_bots = 0;                     //the number of infected devices at any given time
-typedef int[0, total_devices-1] bot_id_t;        //possible values for bot ids
-typedef int[1, 10] credentials_t;                //possible values for credentials
+int[0, total_devices] current_number_bots = 0;   //the number of infected devices at any given time
+typedef int[0, total_devices-1] bot_id_t;        //possible values for bot ids (akin to ip addresses)
+typedef int[100, 110] credentials_t;             //possible values for credentials (akin to username/password combination)
 
 chan dictionary_attack[total_devices];           //a channel for each device representing the attempted login on that device
 chan login_success[total_devices];               //a channel for each device representing the a successful login response to the attacking bot
@@ -200,7 +200,7 @@ const int Color_Yellow = 6;</declaration>
 	<template>
 		<name>Bot_First</name>
 		<declaration>clock x1;
-int attack_attempts;
+int[0, 10] attack_attempts;
 bot_id_t target;
 credentials_t credentials;
 
@@ -268,13 +268,13 @@ target=t</label>
 		<transition>
 			<source ref="id15"/>
 			<target ref="id16"/>
-			<label kind="guard" x="86" y="-508">attack_attempts&lt;=10</label>
+			<label kind="guard" x="86" y="-508">attack_attempts&lt;10</label>
 			<nail x="18" y="-483"/>
 		</transition>
 		<transition>
 			<source ref="id15"/>
 			<target ref="id17"/>
-			<label kind="guard" x="-110" y="-586">attack_attempts&gt;10</label>
+			<label kind="guard" x="-110" y="-586">attack_attempts&gt;=10</label>
 			<nail x="281" y="-561"/>
 			<nail x="-348" y="-561"/>
 		</transition>
@@ -311,11 +311,10 @@ target=t</label>
 	</template>
 	<template>
 		<name>Bot</name>
-		<parameter>const bot_id_t id</parameter>
+		<parameter>const bot_id_t id, const credentials_t credentials</parameter>
 		<declaration>clock x2;
-int attack_attempts;
+int[0, 10] attack_attempts;
 bot_id_t target;
-credentials_t credentials;
 
 bool credential_match(){
     return credentials == credential_attempt[id];
@@ -386,13 +385,13 @@ void send_credential(credentials_t c){
 		<transition>
 			<source ref="id32"/>
 			<target ref="id22"/>
-			<label kind="guard" x="-1504" y="-501">attack_attempts&lt;=10</label>
+			<label kind="guard" x="-1504" y="-501">attack_attempts&lt;10</label>
 			<nail x="-1572" y="-476"/>
 		</transition>
 		<transition>
 			<source ref="id32"/>
 			<target ref="id26"/>
-			<label kind="guard" x="-1683" y="-552">attack_attempts&gt;10</label>
+			<label kind="guard" x="-1683" y="-552">attack_attempts&gt;=10</label>
 			<nail x="-1309" y="-527"/>
 			<nail x="-1938" y="-527"/>
 		</transition>
@@ -466,8 +465,6 @@ target:=t</label>
 		<transition>
 			<source ref="id27"/>
 			<target ref="id23"/>
-			<label kind="select" x="-2832" y="-545">c:credentials_t</label>
-			<label kind="assignment" x="-2831" y="-520">credentials:=c</label>
 		</transition>
 		<transition>
 			<source ref="id25"/>
@@ -490,8 +487,11 @@ LDR = Loader();
 
 BOT_F = Bot_First();
 
+BOT1 = Bot(0,101);
+BOT2 = Bot(1,102);
+
 // List one or more processes to be composed into a system.
-system MIRAI, CNC_SRV, SCAN_SRV, LDR, BOT_F, Bot;
+system MIRAI, CNC_SRV, SCAN_SRV, LDR, BOT_F, BOT1, BOT2;
     
 
 
@@ -515,12 +515,14 @@ gantt {
     BOT_DF_Scan:        BOT_F.Telnet_Port_Scan -&gt; Color_LOrange;
     BOT_DF_Attacking:   BOT_F.Victim_Found -&gt; Color_Red; 
 
-    Bot(i:bot_id_t):
-          Bot(i).Connected -&gt; Color_Green,
-          Bot(i).Telnet_Port_Scan -&gt; Color_LOrange,
-          Bot(i).Victim_Found -&gt; Color_Red,
-          Bot(i).Attack_Attempted -&gt; Color_Yellow; 
 
+    BOT_1_Connected:    BOT1.Connected -&gt; Color_Green;
+    BOT_1_Scan:         BOT1.Telnet_Port_Scan -&gt; Color_LOrange;
+    BOT_1_Attacking:    BOT1.Victim_Found -&gt; Color_Red;
+
+    BOT_2_Connected:    BOT2.Connected -&gt; Color_Green;
+    BOT_2_Scan:         BOT2.Telnet_Port_Scan -&gt; Color_LOrange;
+    BOT_2_Attacking:    BOT2.Victim_Found -&gt; Color_Red;
 }</system>
 	<queries>
 		<query>
