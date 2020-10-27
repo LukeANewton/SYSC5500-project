@@ -13,8 +13,9 @@ const int timeout = 10;                           //the maximum amount of time t
 int total_scans = 0;
 int total_attempts = 0;
 int[0, total_devices] current_number_bots = 0;   //the number of infected devices at any given time
-typedef int[0, total_devices-1] bot_id_t;        //possible values for bot ids (akin to ip addresses)
-typedef int[101, 110] credentials_t;             //possible values for credentials (akin to username/password combination)
+
+typedef int[1, total_devices] bot_id_t;        //possible values for bot ids (akin to ip addresses)
+typedef int[101, 111] credentials_t;             //possible values for credentials (akin to username/password combination)
 
 broadcast chan dictionary_attack[total_devices];           //a channel for each device representing the attempted login on that device
 urgent chan login_success[total_devices];               //a channel for each device representing the a successful login response to the attacking bot
@@ -43,12 +44,12 @@ void ADD_RECORD(bot_id_t id){
 }
 
 bot_id_t CHOOSE_IP(){
-    bot_id_t i = 0; 
-    for (i ; i&lt;total_devices; i++){
+    bot_id_t i = 1; 
+    for (i; i&lt;=total_devices; i++){
         if (!MATCH(i)){
             total_scans += 1;
             return i;
-        }
+        }            
     }
     return i;
 }
@@ -86,7 +87,7 @@ const int Color_Yellow = 6;</declaration>
 		<transition>
 			<source ref="id0"/>
 			<target ref="id1"/>
-			<label kind="guard" x="-433" y="-161">total_time&gt;=2</label>
+			<label kind="guard" x="-433" y="-161">total_time&gt;=5</label>
 			<label kind="synchronisation" x="-408" y="-144">setup!</label>
 		</transition>
 	</template>
@@ -337,7 +338,6 @@ void exploit_credential(credentials_t target_cd){
 }</declaration>
 		<location id="id19" x="-1632" y="-153">
 			<name x="-1691" y="-136">Attack_Successful</name>
-			<committed/>
 		</location>
 		<location id="id20" x="-1564" y="-340">
 			<name x="-1607" y="-375">Victim_Found</name>
@@ -392,7 +392,7 @@ void exploit_credential(credentials_t target_cd){
 		<transition>
 			<source ref="id20"/>
 			<target ref="id24"/>
-			<label kind="guard" x="-1819" y="-272">MATCH(target_ip) &amp;&amp; 
+			<label kind="guard" x="-1819" y="-272">MATCH(target_ip) ||
 attack_attempts&gt;=10</label>
 			<label kind="assignment" x="-1785" y="-229">x2:=0</label>
 			<nail x="-1657" y="-229"/>
@@ -479,9 +479,9 @@ LDR = Loader();
 
 BOT_F = Bot_First();
 
-BOT1 = Bot(3,101);
+BOT1 = Bot(2,101);
 BOT2 = Bot(1,102);
-BOT3 = Bot(0,103);
+BOT3 = Bot(3,103);
 
 
 // List one or more processes to be composed into a system.
@@ -525,6 +525,14 @@ gantt {
 	<queries>
 		<query>
 			<formula>A[] !deadlock</formula>
+			<comment></comment>
+		</query>
+		<query>
+			<formula>A[] deadlock imply (current_number_bots+1)==total_devices</formula>
+			<comment></comment>
+		</query>
+		<query>
+			<formula></formula>
 			<comment></comment>
 		</query>
 	</queries>
