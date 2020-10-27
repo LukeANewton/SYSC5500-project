@@ -7,7 +7,7 @@
 urgent broadcast chan activate_first, new_victim, activate_new, activated, report, start_loader;
 broadcast chan setup;
 
-const int total_devices = 4;                     //the number of devices in the network
+const int total_devices = 6;                     //the number of devices in the network
 const int timeout = 10;                           //the maximum amount of time to wait for a login response
 
 int total_scans = 0;
@@ -218,7 +218,6 @@ const int Color_Yellow = 6;</declaration>
 int[0, 10] attack_attempts;
 bot_id_t target_ip;
 credentials_t target_cd;
-credentials_t credentials;
 
 void exploit_credential(credentials_t target_cd){
     attack_attempts += 1;
@@ -248,6 +247,12 @@ void exploit_credential(credentials_t target_cd){
 			<committed/>
 		</location>
 		<init ref="id13"/>
+		<transition>
+			<source ref="id16"/>
+			<target ref="id16"/>
+			<nail x="-280" y="-467"/>
+			<nail x="-425" y="-467"/>
+		</transition>
 		<transition>
 			<source ref="id15"/>
 			<target ref="id16"/>
@@ -360,6 +365,12 @@ void exploit_credential(credentials_t target_cd){
 			<name x="-1360" y="-323">Attack_Attempted</name>
 		</location>
 		<init ref="id25"/>
+		<transition>
+			<source ref="id24"/>
+			<target ref="id24"/>
+			<nail x="-1870" y="-442"/>
+			<nail x="-2014" y="-442"/>
+		</transition>
 		<transition>
 			<source ref="id19"/>
 			<target ref="id24"/>
