@@ -1,4 +1,4 @@
-## Information to collect
+# Information to collect
 - reachability 
     - will all bots always be infected?
     - will X% of devices always be infected?
@@ -9,8 +9,10 @@
     - how many login attempts are required to infect X% od devices?
 - reinfectivity 
     - if rebooting is allowed (which clears the infection), how many times does a device get infected before X% of devices are infected at once?
+- botnet stability
+    - with rebooting, we have some rate at which bots are added, and some rate at which bots leave the network. What is the steady state size?
 
-## Situations to consider
+# Situations to consider
 - how different amounts of rebooting affects information above
     - none
     - period (every X seconds exactly)
@@ -26,14 +28,20 @@
     - if the bot wants to hide, it should only be propagating X% of the time
         - model with longer time delays, or extra states
     - **if the network needs some % required availability, you do not want to have to reboot devices because they will be offline. However, if a certain percentage of time your devices are propagating a botnet instead of doing their work, then you may get more up time in the long run by rebooting now**
-- different topologies (if time)
+
+# Possible Extensions
+- different topologies
     - default is a fully connected network
     - what if you need to infect certain nodes to try and infect others?
         - may be too complicated to model
-- second botnet with mutually exclusive infection (if time)
+- second botnet with mutually exclusive infection
     - with rebooting to remove either infection, can one every infect X% of devices at once?
 
-## Issues
+# Issues
+- multiple devices might being waiting to download a binary, but only the most recently infected one will get the binary
+- model complexity
+    - there is an upper limit to how complicated we can make the model and still be able to use some verifier features
+    - if we can't use the verifier even after attempting to simplify the model, then we might as make it is complicated as we like and collect all our date through simulation runs
 - we need "realistic times" for guards and invariants
     - both aspects of times (processing time and network delay) are hard to estimate
     - if the processing is simple (which it is in most cases), maybe we can focus on network delay only?
@@ -42,6 +50,3 @@
             - round trips would then be two time units
         - with this, we can make a more realistic model, but may be limited in what kind of information we collect
             - eg. when selecting larger or smaller times for aspects such as reboot period, we can only specify the relationship between changing values and the new results, not any hard values
-- multiple devices might being waiting to download a binary, but only the most recently infected one will get the binary
-- model seems still too complex for verifier to do its thing
-    - if we can't use the verifier even after attempting to simplify the model, then we might as make it is complicated as we like and collect all our date through simulation runs
