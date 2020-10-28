@@ -25,6 +25,7 @@ broadcast chan load_binary[total_devices];                 //a channel for each 
 
 bot_id_t victim_id;                              //the id of the bot currently being infected
 bool in_botnet[total_devices];                   //the list of currently infected bot IDs (the index value is the device id and the value indicates if the device is in the botnet)
+
 credentials_t credential_attempt[total_devices]; //a list to represent passing credentials from attacking bot to device under attack
 
 clock total_time;
@@ -43,7 +44,7 @@ void ADD_RECORD(bot_id_t id){
     current_number_bots += 1;
 }
 
-bot_id_t CHOOSE_IP(){
+/* bot_id_t CHOOSE_IP(){
     bot_id_t i = 1; 
     for (i; i&lt;=total_devices; i++){
         if (!MATCH(i)){
@@ -53,6 +54,7 @@ bot_id_t CHOOSE_IP(){
     }
     return i;
 }
+*/
 
 
 //***********************************************************
@@ -109,7 +111,6 @@ const int Color_Yellow = 6;</declaration>
 		</location>
 		<location id="id6" x="-586" y="-136">
 			<name x="-620" y="-119">IM_Stage_2</name>
-			<committed/>
 		</location>
 		<init ref="id2"/>
 		<transition>
@@ -243,6 +244,7 @@ void exploit_credential(credentials_t target_cd){
 		</location>
 		<location id="id17" x="280" y="-348">
 			<name x="228" y="-332">Attack_Attempted</name>
+			<urgent/>
 		</location>
 		<location id="id18" x="8" y="-153">
 			<name x="-51" y="-136">Attack_Successful</name>
@@ -259,8 +261,7 @@ void exploit_credential(credentials_t target_cd){
 		<transition>
 			<source ref="id15"/>
 			<target ref="id16"/>
-			<label kind="guard" x="-238" y="-280">MATCH(target_ip) || 
-attack_attempts&gt;=10</label>
+			<label kind="guard" x="-238" y="-263">attack_attempts&gt;=10</label>
 			<label kind="assignment" x="-195" y="-238">x1:=0</label>
 			<nail x="-102" y="-238"/>
 			<nail x="-255" y="-238"/>
@@ -347,6 +348,7 @@ void exploit_credential(credentials_t target_cd){
 		</location>
 		<location id="id23" x="-2091" y="-340">
 			<name x="-2109" y="-324">Active</name>
+			<committed/>
 		</location>
 		<location id="id24" x="-1938" y="-340">
 			<name x="-1997" y="-374">Telnet_Port_Scan</name>
@@ -361,9 +363,11 @@ void exploit_credential(credentials_t target_cd){
 		</location>
 		<location id="id27" x="-2627" y="-341">
 			<name x="-2678" y="-324">Login_Attempted</name>
+			<committed/>
 		</location>
 		<location id="id28" x="-1309" y="-340">
 			<name x="-1360" y="-323">Attack_Attempted</name>
+			<urgent/>
 		</location>
 		<init ref="id25"/>
 		<transition>
@@ -382,8 +386,7 @@ void exploit_credential(credentials_t target_cd){
 		<transition>
 			<source ref="id20"/>
 			<target ref="id24"/>
-			<label kind="guard" x="-1819" y="-272">MATCH(target_ip) ||
-attack_attempts&gt;=10</label>
+			<label kind="guard" x="-1819" y="-255">attack_attempts&gt;=10</label>
 			<label kind="assignment" x="-1785" y="-229">x2:=0</label>
 			<nail x="-1657" y="-229"/>
 			<nail x="-1853" y="-229"/>
@@ -536,15 +539,19 @@ gantt {
 			<comment></comment>
 		</query>
 		<query>
-			<formula>pr[&lt;=100] (current_number_bots==5)</formula>
+			<formula>Pr[&lt;=100] (&lt;&gt;current_number_bots==5)</formula>
 			<comment></comment>
 		</query>
 		<query>
-			<formula></formula>
+			<formula>Pr[&lt;=50] (&lt;&gt;current_number_bots==5)</formula>
 			<comment></comment>
 		</query>
 		<query>
-			<formula></formula>
+			<formula>Pr[&lt;=25] (&lt;&gt;current_number_bots)</formula>
+			<comment></comment>
+		</query>
+		<query>
+			<formula>Simulate[&lt;=50] (&lt;&gt;current_number_bots)</formula>
 			<comment></comment>
 		</query>
 	</queries>
