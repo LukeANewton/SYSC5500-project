@@ -531,11 +531,15 @@ gantt {
 			<comment></comment>
 		</query>
 		<query>
-			<formula>A[] deadlock imply (current_number_bots+1)==total_devices</formula>
+			<formula>A[] deadlock imply current_number_bots==total_devices-1</formula>
 			<comment></comment>
 		</query>
 		<query>
-			<formula>A[] total_time==20 imply (current_number_bots+1)==total_devices</formula>
+			<formula>A[] total_time==50 imply current_number_bots+==total_devices-1</formula>
+			<comment></comment>
+		</query>
+		<query>
+			<formula>E&lt;&gt; current_number_bots==total_devices-1</formula>
 			<comment></comment>
 		</query>
 		<query>
@@ -547,11 +551,27 @@ gantt {
 			<comment></comment>
 		</query>
 		<query>
-			<formula>Pr[&lt;=25] (&lt;&gt;current_number_bots)</formula>
+			<formula>Pr[&lt;=25] (&lt;&gt;current_number_bots==5)</formula>
 			<comment></comment>
 		</query>
 		<query>
-			<formula>Simulate[&lt;=50] (&lt;&gt;current_number_bots)</formula>
+			<formula>simulate[&lt;=50] {BOT_DF.Telnet_Port_Scan, BOT_DF.Victim_Found}</formula>
+			<comment></comment>
+		</query>
+		<query>
+			<formula>simulate[&lt;=50] {in_botnet[1}</formula>
+			<comment></comment>
+		</query>
+		<query>
+			<formula>Pr[&lt;=25] (&lt;&gt;in_botnet[1])</formula>
+			<comment></comment>
+		</query>
+		<query>
+			<formula>Pr[&lt;=25] (&lt;&gt;in_botnet[1] &amp;&amp; in_botnet[2])</formula>
+			<comment></comment>
+		</query>
+		<query>
+			<formula>Pr[&lt;=25] (&lt;&gt;in_botnet[1] &amp;&amp; in_botnet[2] &amp;&amp; in_botnet[3])</formula>
 			<comment></comment>
 		</query>
 	</queries>
