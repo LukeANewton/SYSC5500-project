@@ -12,6 +12,7 @@ This is the term project for SYSC5500 (Designing Secure Networking and Computer 
 - **botnet-model<span></span>-ideas.md** contains a list of what data is interesting to collect from the model, and possible extensions to the project
 - **Slide_Format_DarkRED.pptx** is the formatting for the slides of the progress and final presentations
 
+## References
 1. M. Antonakakis, T. April, M. Bailey, M. Bernhard, E. Bursztein, J. Cochran, Z. Durumeric, J. A. Halderman, L. Invernizzi, M. Kallitsis, D. Kumar, C. Lever, Z. Ma, J. Mason, D. Menscher, C. Seaman, N.
 Sullivan, K. Thomas, and Y. Zhou, “[Understanding the mirai botnet](https://www.usenix.org/system/files/conference/usenixsecurity17/sec17-antonakakis.pdf),” in 26th USENIX Security Symposium (USENIX Security 17), (Vancouver, BC), pp. 1093–1110, USENIX Association, Aug. 2017
 2. G. Kambourakis, C. Kolias and A. Stavrou, "[The Mirai botnet and the IoT Zombie Armies](https://ieeexplore.ieee.org/document/8170867)," MILCOM 2017 - 2017 IEEE Military Communications Conference (MILCOM), Baltimore, MD, 2017,
