@@ -12,6 +12,7 @@ const int timeout = 10;                           //the maximum amount of time t
 
 int total_scans = 0;
 int total_attempts = 0;
+int total_messages = 0;
 int[0, total_devices] current_number_bots = 0;   //the number of infected devices at any given time
 
 typedef int[1, total_devices] bot_id_t;           //possible values for bot ids (akin to ip addresses)
@@ -224,6 +225,7 @@ credentials_t target_cd;
 
 void exploit_credential(credentials_t target_cd){
     attack_attempts += 1;
+    total_messages += 2;
     total_attempts += 1;
     credential_attempt[target_ip] = target_cd;
 }</declaration>
@@ -313,7 +315,8 @@ x1:=0</label>
 			<label kind="guard" x="-204" y="-374">x1&gt;=2</label>
 			<label kind="assignment" x="-246" y="-348">target_ip:=ip, total_scans++,
 x1:=0, target_cd:=101,
-attack_attempts:=0</label>
+attack_attempts:=0,
+total_messages+=2</label>
 		</transition>
 	</template>
 	<template>
@@ -330,6 +333,7 @@ bool credential_match(){
 
 void exploit_credential(credentials_t target_cd){
     attack_attempts += 1;
+    total_messages += 2;
     total_attempts += 1;
     credential_attempt[target_ip] = target_cd++;
 }</declaration>
@@ -406,7 +410,8 @@ void exploit_credential(credentials_t target_cd){
 			<label kind="guard" x="-1776" y="-365">x2&gt;=2</label>
 			<label kind="assignment" x="-1819" y="-340">target_ip:=ip, total_scans++,
 x2:=0, target_cd:=101,
-attack_attempts:=0</label>
+attack_attempts:=0, 
+total_messages+=2</label>
 		</transition>
 		<transition>
 			<source ref="id20"/>
@@ -527,51 +532,167 @@ gantt {
 }</system>
 	<queries>
 		<query>
-			<formula>A[] !deadlock</formula>
+			<formula></formula>
 			<comment></comment>
+		</query>
+		<query>
+			<formula>&lt;----- MODEL VERIFICATION -----&gt;</formula>
+			<comment></comment>
+		</query>
+		<query>
+			<formula>A[] !deadlock</formula>
+			<comment>Deadlocks never occur</comment>
 		</query>
 		<query>
 			<formula>A[] deadlock imply current_number_bots==total_devices-1</formula>
+			<comment>A deadlock implies that all devices have been infected</comment>
+		</query>
+		<query>
+			<formula></formula>
 			<comment></comment>
 		</query>
 		<query>
-			<formula>A[] total_time==50 imply current_number_bots+==total_devices-1</formula>
+			<formula>&lt;----- INFECTION REACHABILITY -----&gt;</formula>
 			<comment></comment>
+		</query>
+		<query>
+			<formula>A&lt;&gt; current_number_bots==total_devices-1</formula>
+			<comment>All devices will always be infected in every possible scenario</comment>
 		</query>
 		<query>
 			<formula>E&lt;&gt; current_number_bots==total_devices-1</formula>
+			<comment>It is possible for every device to eventually be infected</comment>
+		</query>
+		<query>
+			<formula></formula>
 			<comment></comment>
 		</query>
 		<query>
-			<formula>Pr[&lt;=100] (&lt;&gt;current_number_bots==5)</formula>
+			<formula>&lt;----- INFECTION TIMES -----&gt;</formula>
 			<comment></comment>
 		</query>
 		<query>
-			<formula>Pr[&lt;=50] (&lt;&gt;current_number_bots==5)</formula>
-			<comment></comment>
+			<formula>A[] total_time==50 imply current_number_bots==total_devices-1</formula>
+			<comment>All devices are always infected by 50 time units</comment>
 		</query>
 		<query>
-			<formula>Pr[&lt;=25] (&lt;&gt;current_number_bots==5)</formula>
-			<comment></comment>
+			<formula>Pr[total_time&lt;=100; 100] (&lt;&gt;current_number_bots==total_devices-1)</formula>
+			<comment>The probability all devices are compromised in 100 time units</comment>
 		</query>
 		<query>
-			<formula>simulate[&lt;=50] {BOT_DF.Telnet_Port_Scan, BOT_DF.Victim_Found}</formula>
-			<comment></comment>
+			<formula>Pr[total_time&lt;=50] (&lt;&gt;current_number_bots==total_devices-1)</formula>
+			<comment>The probability all devices are compromised in 50 time units</comment>
 		</query>
 		<query>
-			<formula>simulate[&lt;=50] {in_botnet[1}</formula>
-			<comment></comment>
+			<formula>Pr[total_time&lt;=25] (&lt;&gt;current_number_bots==total_devices-1)</formula>
+			<comment>The probability all devices are compromised in 25 time units</comment>
+		</query>
+		<query>
+			<formula>E [total_time&lt;=10; 100] (max: current_number_bots)</formula>
+			<comment>The expected number of compromised devices in 10 time units (generated with 100 simulation runs)</comment>
+		</query>
+		<query>
+			<formula>E [total_time&lt;=20; 100] (max: current_number_bots)</formula>
+			<comment>The expected number of compromised devices in 20 time units (generated with 100 simulation runs)</comment>
+		</query>
+		<query>
+			<formula>E [total_time&lt;=25; 100] (max: current_number_bots)</formula>
+			<comment>The expected number of compromised devices in 25 time units (generated with 100 simulation runs)</comment>
+		</query>
+		<query>
+			<formula>E [total_time&lt;=30; 100] (max: current_number_bots)</formula>
+			<comment>The expected number of compromised devices in 30 time units (generated with 100 simulation runs)</comment>
+		</query>
+		<query>
+			<formula>E [total_time&lt;=40; 100] (max: current_number_bots)</formula>
+			<comment>The expected number of compromised devices in 40 time units (generated with 100 simulation runs)</comment>
+		</query>
+		<query>
+			<formula>E [total_time&lt;=50; 100] (max: current_number_bots)</formula>
+			<comment>The expected number of compromised devices in 50 time units (generated with 100 simulation runs)</comment>
+		</query>
+		<query>
+			<formula>E [total_time&lt;=60; 100] (max: current_number_bots)</formula>
+			<comment>The expected number of compromised devices in 60 time units (generated with 100 simulation runs)</comment>
+		</query>
+		<query>
+			<formula>E [total_time&lt;=70; 100] (max: current_number_bots)</formula>
+			<comment>The expected number of compromised devices in 70 time units (generated with 100 simulation runs)</comment>
+		</query>
+		<query>
+			<formula>E [total_time&lt;=80; 100] (max: current_number_bots)</formula>
+			<comment>The expected number of compromised devices in 80 time units (generated with 100 simulation runs)</comment>
+		</query>
+		<query>
+			<formula>E [total_time&lt;=90; 100] (max: current_number_bots)</formula>
+			<comment>The expected number of compromised devices in 90 time units (generated with 100 simulation runs)</comment>
+		</query>
+		<query>
+			<formula>E [total_time&lt;=100; 100] (max: current_number_bots)</formula>
+			<comment>The expected number of compromised devices in 100 time units (generated with 100 simulation runs)</comment>
+		</query>
+		<query>
+			<formula>Pr[&lt;=50] (&lt;&gt;in_botnet[1])</formula>
+			<comment>The probability bot 1 has been infected by 50 time units</comment>
+		</query>
+		<query>
+			<formula>Pr[&lt;=50] (&lt;&gt;in_botnet[2])</formula>
+			<comment>The probability bot 2 has been infected by 50 time units</comment>
+		</query>
+		<query>
+			<formula>Pr[&lt;=50] (&lt;&gt;in_botnet[3])</formula>
+			<comment>The probability bot 3 has been infected by 50 time units</comment>
+		</query>
+		<query>
+			<formula>Pr[&lt;=50] (&lt;&gt;in_botnet[4])</formula>
+			<comment>The probability bot 4 has been infected by 50 time units</comment>
+		</query>
+		<query>
+			<formula>Pr[&lt;=50] (&lt;&gt;in_botnet[5])</formula>
+			<comment>The probability bot 5 has been infected by 50 time units</comment>
 		</query>
 		<query>
 			<formula>Pr[&lt;=25] (&lt;&gt;in_botnet[1])</formula>
-			<comment></comment>
+			<comment>The probability bot 1 has been infected by 25 time units</comment>
 		</query>
 		<query>
 			<formula>Pr[&lt;=25] (&lt;&gt;in_botnet[1] &amp;&amp; in_botnet[2])</formula>
-			<comment></comment>
+			<comment>The probability bots 1 and 2 have been infected by 25 time units</comment>
 		</query>
 		<query>
 			<formula>Pr[&lt;=25] (&lt;&gt;in_botnet[1] &amp;&amp; in_botnet[2] &amp;&amp; in_botnet[3])</formula>
+			<comment>The probability bots 1, 2 , and 3 have been infected by 25 time units</comment>
+		</query>
+		<query>
+			<formula>simulate [total_time&lt;=100; 100] {current_number_bots}</formula>
+			<comment>simulate 100 runs for 100 time units each and plot the number of infected bots against simulation time</comment>
+		</query>
+		<query>
+			<formula>simulate [total_time&lt;=100; 100] {in_botnet[1], in_botnet[2], in_botnet[3], in_botnet[4], in_botnet[5]}</formula>
+			<comment>simulate 100 runs for 100 time units each and plot when each bot becomes infected</comment>
+		</query>
+		<query>
+			<formula></formula>
+			<comment></comment>
+		</query>
+		<query>
+			<formula>&lt;----- Network Traffic -----&gt;</formula>
+			<comment></comment>
+		</query>
+		<query>
+			<formula>Pr[&lt;=32] (&lt;&gt; total_messages&gt;75)</formula>
+			<comment>Probability that at least 75 messages are sent over the network in 32 time units (which is the expected time the infect all 5 devices)</comment>
+		</query>
+		<query>
+			<formula>simulate [total_time&lt;=100; 100] {total_scans, total_attempts} : current_number_bots==total_devices-1</formula>
+			<comment>Simulate 100 runs for either 100 time units, or until every bot is infected, and plot the number of network scans and login attempts</comment>
+		</query>
+		<query>
+			<formula>simulate [total_time&lt;=100; 100] {total_messages} : current_number_bots==total_devices-1</formula>
+			<comment>Simulate 100 runs for either 100 time units, or until every bot is infected, and plot the number of messages sent over the network</comment>
+		</query>
+		<query>
+			<formula></formula>
 			<comment></comment>
 		</query>
 	</queries>
