@@ -1,0 +1,2 @@
+# Progress Presentation
+This folder contains a copy of the slides for the progress presentation, as well as a folder with the data and analysis for the preliminary results discussed in the presentation.

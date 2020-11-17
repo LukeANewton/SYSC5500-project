@@ -1,0 +1,92 @@
+%------------------------------------------------------------------------------
+%    File : ReviewMacros.tex
+%  Author : Jason Jaskolka
+% Version : 1.0
+
+% This file contains macro definitions for reviewing documents.
+%------------------------------------------------------------------------------
+% These macros require the following package inclusions:
+	% \usepackage{soul}
+%------------------------------------------------------------------------------
+
+% Color Definitions
+%------------------------------------------------------------------------------
+\definecolor{darkcyan}{rgb}{0.75,0.0,0.0}
+\definecolor{darkgreen}{rgb}{0.0,0.6,0.0}
+\definecolor{darkblue}{rgb}{0.0,0.0,0.6}
+\definecolor{darkcyan}{rgb}{0.0,0.6,0.6}
+\definecolor{darkmagenta}{rgb}{0.6,0.0,0.6}
+\definecolor{darkamber}{rgb}{1.0,0.5,0.0}
+\definecolor{darkyellow}{rgb}{0.6,0.6,0.0}
+\definecolor{darkred}{rgb}{0.9,0.0,0.0}
+
+\definecolor{lightred}{rgb}{1.0,0.9,0.9}
+\definecolor{lightgreen}{rgb}{0.9,1.0,0.9}
+\definecolor{lightblue}{rgb}{0.9,0.9,1.0}
+\definecolor{lightcyan}{rgb}{0.8,1.0,1.0}
+\definecolor{lightmagenta}{rgb}{1.0,0.8,1.0}
+\definecolor{lightamber}{rgb}{1.0,0.8,0.0}
+\definecolor{lightyellow}{rgb}{1.0,1.0,0.8}
+
+\definecolor{webgreen}{rgb}{0,0.5,0}
+\definecolor{webbrown}{rgb}{0.6,0,0}
+
+\definecolor{grey}{rgb}{0.65,0.65,0.65}
+\definecolor{purple}{rgb}{0.4,0,0.75}
+%------------------------------------------------------------------------------
+
+% Notes
+%------------------------------------------------------------------------------
+\newcommand{\mynote}[2]{
+	\ifstrequal{#1}{0}{\textcolor{darkamber}{#2}}{}
+  	\ifstrequal{#1}{1}{\textcolor{darkmagenta}{#2}}{}
+  	\ifstrequal{#1}{2}{\textcolor{darkcyan}{#2}}{}
+  	\ifstrequal{#1}{3}{\textcolor{darkgreen}{#2}}{}
+  	\ifstrequal{#1}{4}{\textcolor{darkred}{#2}}{}
+}
+%------------------------------------------------------------------------------
+
+% To Discuss
+%------------------------------------------------------------------------------
+\newcommand{\todiscuss}[2]{
+	\ifstrequal{#1}{0}{\textcolor{darkamber}{\textit{\textbf{TO DISCUSS}: #2}}}{}
+  	\ifstrequal{#1}{1}{\textcolor{darkmagenta}{\textit{\textbf{TO DISCUSS}: #2}}}{}
+  	\ifstrequal{#1}{2}{\textcolor{darkcyan}{\textit{\textbf{TO DISCUSS}: #2}}}{}
+  	\ifstrequal{#1}{3}{\textcolor{darkgreen}{\textit{\textbf{TO DISCUSS}: #2}}}{}
+}
+%------------------------------------------------------------------------------
+
+% To Do
+%------------------------------------------------------------------------------
+\newcommand{\todo}[2]{
+	\ifstrequal{#1}{0}{\textcolor{darkamber}{\textbf{\underline{TO DO}}: #2}}{}
+  	\ifstrequal{#1}{1}{\textcolor{darkmagenta}{\textbf{\underline{TO DO}}: #2}}{}
+  	\ifstrequal{#1}{2}{\textcolor{darkcyan}{\textbf{\underline{TO DO}}: #2}}{}
+  	\ifstrequal{#1}{3}{\textcolor{darkgreen}{\textbf{\underline{TO DO}}: #2}}{}
+  	\ifstrequal{#1}{4}{\textcolor{darkred}{\textbf{\underline{TO DO}}: #2}}{}
+}
+%------------------------------------------------------------------------------
+
+% To Address
+%------------------------------------------------------------------------------
+\newcommand{\toaddress}[2]{
+	\ifstrequal{#1}{0}{~\\\noindent\textcolor{darkamber}{$\bigstar$~\textbf{#2}}\\}{}
+  	\ifstrequal{#1}{1}{~\\\noindent\textcolor{darkmagenta}{$\bigstar$~\textbf{#2}}\\}{}
+  	\ifstrequal{#1}{2}{~\\\noindent\textcolor{darkcyan}{$\bigstar$~\textbf{#2}}\\}{}
+  	\ifstrequal{#1}{3}{~\\\noindent\textcolor{darkgreen}{$\bigstar$~\textbf{#2}}\\}{}
+}
+%------------------------------------------------------------------------------
+
+% To Revise
+%------------------------------------------------------------------------------
+\newcommand{\torevise}[1]{
+    {\textcolor{darkred}{\textbf{\underline{TO REVISE}}: #1}}{}
+}
+
+% Track Changes
+%------------------------------------------------------------------------------
+\newcommand{\add}[1]{\textcolor{darkgreen}{#1}}
+\newcommand{\remove}[1]{\textcolor{red}{\st{#1}}}
+\newcommand{\replace}[2]{\remove{#1}~\add{#2}}
+\newcommand{\suggest}[1]{\noindent\textcolor{blue}{$\circ$---~\textit{#1}~---$\circ$}\\}
+%------------------------------------------------------------------------------
