@@ -7,14 +7,14 @@
 urgent broadcast chan activate_first, new_victim, activate_new, activated, report, start_loader;
 broadcast chan setup;
 
-const int total_devices = 6;                      //the number of devices in the network
+const int total_devices = 21;                      //the number of devices in the network
 const int timeout = 10;                           //the maximum amount of time to wait for a login response
 
 int[0, total_devices] current_number_bots = 0;    //the number of infected devices at any given time
 
 typedef int[1, total_devices] bot_id_t;           //possible values for bot ids (akin to ip addresses)
 typedef int[1, total_devices-1] bot_ip_t;
-typedef int[101, 111] credentials_t;              //possible values for credentials (akin to username/password combination)
+typedef int[101, 162] credentials_t;              //possible values for credentials (akin to username/password combination)
 
 urgent broadcast chan dictionary_attack[total_devices];    //a channel for each device representing the attempted login on that device
 urgent broadcast chan login_success[total_devices];        //a channel for each device representing the a successful login response to the attacking bot
@@ -27,11 +27,11 @@ credentials_t credential_attempt[total_devices];  //a list to represent passing 
 
 const int LIMIT = 25000;
 int scan_loops = 0;
-int[0, 10000] total_scans = 0;
+int[0, 25000] total_scans = 0;
 int attempt_loops = 0;
-int[0, 10000] total_attempts = 0;
+int[0, 25000] total_attempts = 0;
 int message_loops = 0;
-int[0, 10000] total_messages = 0;
+int[0, 25000] total_messages = 0;
 
 clock total_time;
 
@@ -497,17 +497,31 @@ LDR = Loader();
 
 BOT_DF = Bot_Default(0,110);
 
-BOT1 = Bot_t1(4,101);
-BOT2 = Bot_t1(1,109);
-BOT3 = Bot_t1(3,103);
-BOT4 = Bot_t1(5,103);
-BOT5 = Bot_t1(2,108);
+BOT1 = Bot_t1(1,157);
+BOT2 = Bot_t1(2,124);
+BOT3 = Bot_t1(3,123);
+BOT4 = Bot_t1(4,110);
+BOT5 = Bot_t1(5,109);
+BOT6 = Bot_t1(6,114);
+BOT7 = Bot_t1(7,151);
+BOT8 = Bot_t1(8,134);
+BOT9 = Bot_t1(9,152);
+BOT10 = Bot_t1(10,130);
+
+BOT11 = Bot_t1(11,149);
+BOT12 = Bot_t1(12,115);
+BOT13 = Bot_t1(13,121);
+BOT14 = Bot_t1(14,146);
+BOT15 = Bot_t1(15,152);
+BOT16 = Bot_t1(16,101);
+BOT17 = Bot_t1(17,132);
+BOT18 = Bot_t1(18,113);
+BOT19 = Bot_t1(19,127);
+BOT20 = Bot_t1(20,131);
 
 
 // List one or more processes to be composed into a system.
-system MIRAI, CNC_SRV, RPT_SRV, LDR, BOT_DF, BOT1, BOT2, BOT3, BOT4, BOT5;
-    
-
+system MIRAI, CNC_SRV, RPT_SRV, LDR, BOT_DF, BOT1, BOT2, BOT3, BOT4, BOT5, BOT6, BOT7, BOT8, BOT9, BOT10, BOT11, BOT12, BOT13, BOT14, BOT15, BOT16, BOT17, BOT18, BOT19, BOT20;
 
 //************************************************
 //Gantt Chart
@@ -554,7 +568,7 @@ gantt {
 			<comment></comment>
 		</query>
 		<query>
-			<formula>E&lt;&gt; total_time == 500
+			<formula>E&lt;&gt; total_time == 5
 </formula>
 			<comment></comment>
 		</query>
@@ -781,6 +795,38 @@ gantt {
 		<query>
 			<formula>simulate [total_time&lt;=100; 100] {total_messages} : current_number_bots==total_devices-1</formula>
 			<comment>Simulate 100 runs for either 100 time units, or until every bot is infected, and plot the number of messages sent over the network</comment>
+		</query>
+		<query>
+			<formula></formula>
+			<comment></comment>
+		</query>
+		<query>
+			<formula>simulate [total_time&lt;=300; 100] {total_messages} : current_number_bots==total_devices-1</formula>
+			<comment></comment>
+		</query>
+		<query>
+			<formula>simulate [total_time&lt;=300; 100] {message_loops*LIMIT + total_messages} : current_number_bots==total_devices-1</formula>
+			<comment></comment>
+		</query>
+		<query>
+			<formula></formula>
+			<comment></comment>
+		</query>
+		<query>
+			<formula>simulate [total_time&lt;=500; 10] {total_messages} : current_number_bots==total_devices-1</formula>
+			<comment></comment>
+		</query>
+		<query>
+			<formula>simulate [total_time&lt;=500; 10] {message_loops*LIMIT + total_messages} : current_number_bots==total_devices-1</formula>
+			<comment></comment>
+		</query>
+		<query>
+			<formula>simulate [total_time&lt;=500; 20] {message_loops*LIMIT + total_messages} : current_number_bots==total_devices-1</formula>
+			<comment></comment>
+		</query>
+		<query>
+			<formula>simulate [total_time&lt;=1000; 100] {message_loops*LIMIT + total_messages} : current_number_bots==total_devices-1</formula>
+			<comment></comment>
 		</query>
 		<query>
 			<formula></formula>
