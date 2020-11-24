@@ -22,7 +22,7 @@ import os
 from glob import glob
 
 # the name for the graph of botnet size vs time
-BOTNET_SIZE_NAME='100 device network with hourly reboots \n and botnet propgation 50% of the time'
+BOTNET_SIZE_NAME='100 device network with daily reboots \n and botnet propgation 50% of the time'
 # the name for the graph of total messages sent vs time
 MESSAGE_PASSING_NAME='total messages sent for 100 periodically \nrebooting devices'
 

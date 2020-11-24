@@ -360,7 +360,7 @@ exploit_credential(target_cd)</label>
 	</template>
 	<template>
 		<name>Bot_t2</name>
-		<parameter>const bot_id_t ip, const credentials_t credentials, const int reboot_length, const int reboot_period, int reboot_time</parameter>
+		<parameter>const bot_id_t ip, const credentials_t credentials, const int reboot_length, const int_t reboot_period, const int period_overflows, int_t reboot_time, int time_overflows</parameter>
 		<declaration>clock x2, x_reboot;
 int[0, 10] attack_attempts;
 bot_ip_t target_ip;
@@ -379,6 +379,7 @@ void reboot(){
     x2:=0;
     in_botnet[ip] := false;
     reboot_time:=reboot_period;
+    time_overflows:=period_overflows;
 }</declaration>
 		<location id="id15" x="-1530" y="-119">
 			<name x="-1589" y="-102">Attack_Successful</name>
@@ -390,7 +391,7 @@ void reboot(){
 		</location>
 		<location id="id17" x="-2057" y="-535">
 			<name x="-2091" y="-527">Connected</name>
-			<label kind="invariant" x="-2133" y="-518">x_reboot&lt;=reboot_time</label>
+			<label kind="invariant" x="-2184" y="-518">x_reboot&lt;=reboot_time+LIMIT*time_overflows</label>
 		</location>
 		<location id="id18" x="-2057" y="-306">
 			<name x="-2091" y="-289">Vulnerable</name>
@@ -398,12 +399,12 @@ void reboot(){
 		<location id="id19" x="-1810" y="-306">
 			<name x="-1869" y="-340">Telnet_Port_Scan</name>
 			<label kind="invariant" x="-1861" y="-297">x2&lt;=1 &amp;&amp;
- x_reboot&lt;=reboot_time</label>
+x_reboot&lt;=reboot_time+LIMIT*time_overflows</label>
 		</location>
 		<location id="id20" x="-1275" y="-306">
 			<name x="-1326" y="-289">Attack_Attempted</name>
 			<label kind="invariant" x="-1266" y="-272">x2&lt;=1 &amp;&amp;
-x_reboot&lt;=reboot_time</label>
+x_reboot&lt;=reboot_time+LIMIT*time_overflows</label>
 		</location>
 		<location id="id21" x="-2057" y="-416">
 			<name x="-2108" y="-399">Login_Successful</name>
@@ -513,16 +514,16 @@ exploit_credential(target_cd)</label>
 	</template>
 	<system>MIRAI_BLCK = Mirai_Blacknet();
 BOT_DF = Bot_Default(0,110);
-BOT1 = Bot_t2(1,150,6,360,279);
-BOT2 = Bot_t2(2,141,6,360,211);
-BOT3 = Bot_t2(3,148,6,360,323);
-BOT4 = Bot_t2(4,103,6,360,287);
-BOT5 = Bot_t2(5,143,6,360,242);
-BOT6 = Bot_t2(6,139,6,360,347);
-BOT7 = Bot_t2(7,116,6,360,320);
-BOT8 = Bot_t2(8,142,6,360,155);
-BOT9 = Bot_t2(9,147,6,360,2);
-BOT10 = Bot_t2(10,153,6,360,296);
+BOT1 = Bot_t2(1,150,6,360,0,279,0);
+BOT2 = Bot_t2(2,141,6,360,0,211,0);
+BOT3 = Bot_t2(3,148,6,360,0,323,0);
+BOT4 = Bot_t2(4,103,6,360,0,287,0);
+BOT5 = Bot_t2(5,143,6,360,0,242,0);
+BOT6 = Bot_t2(6,139,6,360,0,347,0);
+BOT7 = Bot_t2(7,116,6,360,0,320,0);
+BOT8 = Bot_t2(8,142,6,360,0,155,0);
+BOT9 = Bot_t2(9,147,6,360,0,2,0);
+BOT10 = Bot_t2(10,153,6,360,0,296,0);
 system MIRAI_BLCK, BOT_DF, BOT1, BOT2, BOT3, BOT4, BOT5, BOT6, BOT7, BOT8, BOT9, BOT10;
 </system>
 	<queries>

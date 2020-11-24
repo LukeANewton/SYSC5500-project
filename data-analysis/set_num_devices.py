@@ -35,6 +35,11 @@ NUMBER_CREDENTIALS = int(sys.argv[6])
 
 
 assert PROPORTION_ALWAYS_ON + PROPORTION_PERIODIC_REBOOT == 1
+
+# this is necessary becasue UPPAAL integers are 16bit signed
+LIMIT = 32000
+PERIOD_OVERFLOWS = REBOOT_PERIOD // LIMIT
+REBOOT_PERIOD = REBOOT_PERIOD % LIMIT
 # ------------------------------------------------------------
 #                 Step 1: get the model file
 # ------------------------------------------------------------
@@ -55,7 +60,10 @@ for i in range(1, num_always_connected_devices):
 # add the devices with periodic reboot
 force_reboot_initialization = ""
 for i in range(num_always_connected_devices if num_always_connected_devices > 0 else 1, NUMBER_DEVICES+1):
-    init_string += "BOT"+str(i)+" = Bot_t2("+str(i)+","+str(random.randint(101, 100+NUMBER_CREDENTIALS))+","+str(REBOOT_LENGTH)+","+str(REBOOT_PERIOD)+","+str(random.randint(1, REBOOT_PERIOD))+");"
+    first_reboot_time = random.randint(1, REBOOT_PERIOD+LIMIT*PERIOD_OVERFLOWS)
+    time_overflows = first_reboot_time // LIMIT
+    first_reboot_time = first_reboot_time % LIMIT
+    init_string += "BOT"+str(i)+" = Bot_t2("+str(i)+","+str(random.randint(101, 100+NUMBER_CREDENTIALS))+","+str(REBOOT_LENGTH)+","+str(REBOOT_PERIOD)+","+str(PERIOD_OVERFLOWS)+","+str(first_reboot_time)+","+str(time_overflows)+");"
     
 # this part again, does not change based on the number of devices in the network
 init_string += "system MIRAI_BLCK, BOT_DF,"
