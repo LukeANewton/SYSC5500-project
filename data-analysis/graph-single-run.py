@@ -19,12 +19,13 @@ install these packages separately, or use the Anaconda distribution of python.
 import numpy as np
 import matplotlib.pyplot as plt
 import os
-from glob import glob
 
 # the name for the graph of botnet size vs time
-BOTNET_SIZE_NAME='100 device network with daily reboots \n and botnet propgation 50% of the time'
+BOTNET_SIZE_NAME='100 device network with daily rebooting'
 # the name for the graph of total messages sent vs time
 MESSAGE_PASSING_NAME='total messages sent for 100 periodically \nrebooting devices'
+# the name of the folder contining the simulation results to graph
+RESULTS_FOLDER = 'messages-and-bot-size-2020.11.27-09.40.14'
 
 # if true, the botnet size graph shows the percentage of devices infected
 # if false, the botnet size graph shows the number of devices infected
@@ -32,14 +33,11 @@ CALCULATE_PROPORTION=True
 #if CALCULATE_PROPORTION is true, we need the number of devices here as well
 NUMBER_DEVICES=100
 
-#this is only the prefix result folders have, since they are also timestamped
-RESULTS_FOLDER = 'messages-and-bot-size'
-
-
+# if true, the average size of the botnet will be added to the botnet size plot
+PLOT_BOTNET_STEADY_STATE_SIZE = True
 # ------------------------------------------------------------
 #                 Step 1: get the simulation data
 # ------------------------------------------------------------
-RESULTS_FOLDER = glob(RESULTS_FOLDER+'*/')[0]
 files = os.listdir(RESULTS_FOLDER)
 data = list()
 for f in files:
@@ -50,19 +48,26 @@ for f in files:
 # ------------------------------------------------------------
 #                 Step 2: graph each data set
 # ------------------------------------------------------------
-def graph(name, y_axis_label, x, y):
+def graph(name, y_axis_label, x, y, plot_average_y):
     plt.figure()
     ax = plt.axes()
     plt.ylabel(y_axis_label) 
     plt.xlabel('time')  
     plt.title(name)
     ax.plot(x, y);
+    if plot_average_y:
+        average = sum(y)/len(y)
+        ax.plot(x, [average]*len(y), label=str(average));
+        plt.legend()
     plt.grid()
     plt.show()
 
 graph(BOTNET_SIZE_NAME, 
       'proportion devices infected' if CALCULATE_PROPORTION else 'devices infected',
-      data[0][:, 0]*2, 
-      data[0][:, 1]/NUMBER_DEVICES if CALCULATE_PROPORTION else data[0][:, 1])
-graph(MESSAGE_PASSING_NAME, 'total messages sent', data[1][:, 0]*2,  data[1][:, 1])
+      data[0][:, 0], 
+      data[0][:, 1]/NUMBER_DEVICES if CALCULATE_PROPORTION else data[0][:, 1],
+      PLOT_BOTNET_STEADY_STATE_SIZE)
+
+graph(MESSAGE_PASSING_NAME, 'total messages sent', 
+      data[1][:, 0],  data[1][:, 1], False)
 
