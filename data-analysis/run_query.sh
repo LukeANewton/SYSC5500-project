@@ -4,8 +4,8 @@
 NUMBER_DEVICES=100
 
 #proportions should sum to one, this is checked in the python script
-PROPORTION_ALWAYS_ON=1
-PROPORTION_PERIODIC_REBOOT=0
+PROPORTION_ALWAYS_ON=0.75
+PROPORTION_PERIODIC_REBOOT=0.25
 
 # these values are only relevant for devices that reboot periodically
 REBOOT_LENGTH=600

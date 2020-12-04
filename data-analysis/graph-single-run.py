@@ -25,7 +25,7 @@ BOTNET_SIZE_NAME='100 device network with daily rebooting'
 # the name for the graph of total messages sent vs time
 MESSAGE_PASSING_NAME='total messages sent for 100 periodically \nrebooting devices'
 # the name of the folder contining the simulation results to graph
-RESULTS_FOLDER = 'messages-and-bot-size-2020.12.03-15.46.32'
+RESULTS_FOLDER = '75%-always-connected'
 
 # if true, the botnet size graph shows the percentage of devices infected
 # if false, the botnet size graph shows the number of devices infected
