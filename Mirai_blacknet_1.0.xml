@@ -7,7 +7,7 @@
 urgent broadcast chan activate_first, new_victim, activate_new, activated, report, start_loader;
 broadcast chan setup;
 
-const int total_devices = 101;                      //the number of devices in the network
+const int total_devices =11;                      //the number of devices in the network
 const int timeout = 10;                           //the maximum amount of time to wait for a login response
 
 int[0, total_devices] current_number_bots = 0;    //the number of infected devices at any given time
@@ -25,13 +25,8 @@ bool in_botnet[total_devices];                    //the list of currently infect
 
 credentials_t credential_attempt[total_devices];  //a list to represent passing credentials from attacking bot to device under attack
 
-const int LIMIT = 1000;
-int scan_loops = 0;
-int[0, 25000] total_scans = 0;
-int attempt_loops = 0;
-int[0, 25000] total_attempts = 0;
-int message_loops = 0;
-int[0, 25000] total_messages = 0;
+const int LIMIT = 32000;
+typedef int[0, LIMIT] int_t;
 
 clock total_time;
 
@@ -63,40 +58,6 @@ void ADD_RECORD(bot_id_t id){
 
 
 /******** Start a new cycle for messages, scans, and attack attempts whenever they exceed a certain LIMIT *********/
-void NEW_MESSAGE(){
-    if (total_messages&lt;LIMIT){
-        total_messages+=2;
-        return;
-    } else {
-        message_loops++;             //one full cycle has been completed
-        total_messages=2;            //start counting from 2 again after a full cycle of 25000 messages
-        return;
-    }
-}
-
-void NEW_SCAN(){
-    NEW_MESSAGE();
-    if (total_scans&lt;LIMIT){
-        total_scans++;
-        return;
-    } else {
-        scan_loops++;                //one full cycle has been completed
-        total_scans=1;               //start counting from 1 again after a full cycle of 25000 scans
-        return;
-    }
-}
-
-void NEW_ATTEMPT(){
-    NEW_MESSAGE();
-    if (total_attempts&lt;LIMIT){
-        total_attempts++;
-        return;
-    } else {
-        attempt_loops++;             //one full cycle has been completed
-        total_attempts=1;            //start counting from 1 again after a full cycle of 25000 attempts
-        return;
-    }
-}
 
 
 //***********************************************************
@@ -216,8 +177,7 @@ void exploit_credential(credentials_t target_cd){
 			<target ref="id4"/>
 			<label kind="select" x="348" y="-161">ip_sel:bot_ip_t</label>
 			<label kind="guard" x="372" y="-144">x1&gt;=1</label>
-			<label kind="assignment" x="321" y="-119">NEW_SCAN(),
-target_ip:=ip_sel,
+			<label kind="assignment" x="321" y="-119">target_ip:=ip_sel,
 x1:=0,
 attack_attempts:=0</label>
 		</transition>
@@ -227,8 +187,7 @@ attack_attempts:=0</label>
 			<label kind="select" x="603" y="-178">cd_sel:credentials_t</label>
 			<label kind="guard" x="603" y="-161">attack_attempts&lt;10</label>
 			<label kind="synchronisation" x="576" y="-144">dictionary_attack[target_ip]!</label>
-			<label kind="assignment" x="603" y="-119">NEW_ATTEMPT(),
-target_cd:=cd_sel,
+			<label kind="assignment" x="603" y="-119">target_cd:=cd_sel,
 x1:=0,
 exploit_credential(target_cd)</label>
 		</transition>
@@ -281,21 +240,17 @@ void exploit_credential(credentials_t target_cd){
 			<name x="-1903" y="-374">Telnet_Port_Scan</name>
 			<label kind="invariant" x="-1895" y="-331">x2&lt;=1</label>
 		</location>
-		<location id="id13" x="-1844" y="-569">
-			<name x="-1869" y="-603">Inactive</name>
-			<label kind="invariant" x="-1904" y="-569">x2&lt;=5</label>
-		</location>
-		<location id="id14" x="-1309" y="-340">
+		<location id="id13" x="-1309" y="-340">
 			<name x="-1360" y="-323">Attack_Attempted</name>
 			<label kind="invariant" x="-1300" y="-306">x2&lt;=1</label>
 		</location>
-		<location id="id15" x="-2091" y="-450">
+		<location id="id14" x="-2091" y="-450">
 			<name x="-2142" y="-433">Login_Successful</name>
 			<committed/>
 		</location>
-		<init ref="id13"/>
+		<init ref="id10"/>
 		<transition>
-			<source ref="id15"/>
+			<source ref="id14"/>
 			<target ref="id11"/>
 			<label kind="synchronisation" x="-2082" y="-408">login_success[ip]!</label>
 		</transition>
@@ -314,7 +269,7 @@ void exploit_credential(credentials_t target_cd){
 			<nail x="-1802" y="-229"/>
 		</transition>
 		<transition>
-			<source ref="id14"/>
+			<source ref="id13"/>
 			<target ref="id9"/>
 			<label kind="guard" x="-1453" y="-476">x2&gt;=1</label>
 			<nail x="-1309" y="-450"/>
@@ -325,24 +280,22 @@ void exploit_credential(credentials_t target_cd){
 			<target ref="id9"/>
 			<label kind="select" x="-1751" y="-382">ip_sel:bot_ip_t</label>
 			<label kind="guard" x="-1725" y="-365">x2&gt;=1</label>
-			<label kind="assignment" x="-1759" y="-340">NEW_SCAN(),
-target_ip:=ip_sel,
+			<label kind="assignment" x="-1759" y="-340">target_ip:=ip_sel,
 x2:=0,
 attack_attempts:=0</label>
 		</transition>
 		<transition>
 			<source ref="id9"/>
-			<target ref="id14"/>
+			<target ref="id13"/>
 			<label kind="select" x="-1496" y="-399">cd_sel:credentials_t</label>
 			<label kind="guard" x="-1496" y="-382">attack_attempts&lt;10</label>
 			<label kind="synchronisation" x="-1521" y="-365">dictionary_attack[target_ip]!</label>
-			<label kind="assignment" x="-1496" y="-340">NEW_ATTEMPT(),
-target_cd:=cd_sel,
+			<label kind="assignment" x="-1496" y="-340">target_cd:=cd_sel,
 x2:=0,
 exploit_credential(target_cd)</label>
 		</transition>
 		<transition>
-			<source ref="id14"/>
+			<source ref="id13"/>
 			<target ref="id8"/>
 			<label kind="synchronisation" x="-1496" y="-178">login_success[target_ip]?</label>
 			<label kind="assignment" x="-1479" y="-153">victim_id:=target_ip</label>
@@ -350,13 +303,9 @@ exploit_credential(target_cd)</label>
 		</transition>
 		<transition>
 			<source ref="id10"/>
-			<target ref="id15"/>
+			<target ref="id14"/>
 			<label kind="guard" x="-2082" y="-535">credential_match()</label>
 			<label kind="synchronisation" x="-2082" y="-518">dictionary_attack[ip]?</label>
-		</transition>
-		<transition>
-			<source ref="id13"/>
-			<target ref="id10"/>
 		</transition>
 		<transition>
 			<source ref="id11"/>
@@ -365,166 +314,172 @@ exploit_credential(target_cd)</label>
 			<label kind="assignment" x="-1989" y="-340">x2:=0</label>
 		</transition>
 	</template>
-	<system>// Place template instantiations here.
-MIRAI_BLCK = Mirai_Blacknet();
+	<template>
+		<name>Bot_t2</name>
+		<parameter>const bot_id_t ip, const credentials_t credentials, const int reboot_length, const int_t reboot_period, const int period_overflows, int_t reboot_time, int time_overflows</parameter>
+		<declaration>clock x2, x_reboot;
+int[0, 10] attack_attempts;
+bot_ip_t target_ip;
+credentials_t target_cd;
+
+bool credential_match(){
+    return credentials == credential_attempt[ip];
+}
+
+void exploit_credential(credentials_t target_cd){
+    attack_attempts += 1;
+    credential_attempt[target_ip] = target_cd;
+}
+
+void reboot(){
+    x2:=0;
+    in_botnet[ip] := false;
+    reboot_time:=reboot_period;
+    time_overflows:=period_overflows;
+}</declaration>
+		<location id="id15" x="-1530" y="-119">
+			<name x="-1589" y="-102">Attack_Successful</name>
+			<committed/>
+		</location>
+		<location id="id16" x="-1530" y="-306">
+			<name x="-1573" y="-341">Victim_Found</name>
+			<committed/>
+		</location>
+		<location id="id17" x="-2057" y="-535">
+			<name x="-2091" y="-527">Connected</name>
+			<label kind="invariant" x="-2184" y="-518">x_reboot&lt;=reboot_time+LIMIT*time_overflows</label>
+		</location>
+		<location id="id18" x="-2057" y="-306">
+			<name x="-2091" y="-289">Vulnerable</name>
+		</location>
+		<location id="id19" x="-1810" y="-306">
+			<name x="-1869" y="-340">Telnet_Port_Scan</name>
+			<label kind="invariant" x="-1861" y="-297">x2&lt;=1 &amp;&amp;
+x_reboot&lt;=reboot_time+LIMIT*time_overflows</label>
+		</location>
+		<location id="id20" x="-1275" y="-306">
+			<name x="-1326" y="-289">Attack_Attempted</name>
+			<label kind="invariant" x="-1266" y="-272">x2&lt;=1 &amp;&amp;
+x_reboot&lt;=reboot_time+LIMIT*time_overflows</label>
+		</location>
+		<location id="id21" x="-2057" y="-416">
+			<name x="-2108" y="-399">Login_Successful</name>
+			<committed/>
+		</location>
+		<location id="id22" x="-1649" y="-535">
+			<name x="-1675" y="-569">Rebooting</name>
+			<label kind="invariant" x="-1700" y="-527">x2&lt;=reboot_length</label>
+		</location>
+		<init ref="id17"/>
+		<transition>
+			<source ref="id20"/>
+			<target ref="id22"/>
+			<label kind="guard" x="-1521" y="-561">x_reboot &gt;= reboot_time+LIMIT*time_overflows</label>
+			<label kind="assignment" x="-1428" y="-535">reboot(),
+current_number_bots--</label>
+			<nail x="-1198" y="-535"/>
+		</transition>
+		<transition>
+			<source ref="id19"/>
+			<target ref="id22"/>
+			<label kind="guard" x="-1802" y="-416">x_reboot &gt;= reboot_time+LIMIT*time_overflows</label>
+			<label kind="assignment" x="-1802" y="-399">reboot(),
+current_number_bots--</label>
+			<nail x="-1810" y="-442"/>
+		</transition>
+		<transition>
+			<source ref="id17"/>
+			<target ref="id22"/>
+			<label kind="guard" x="-1989" y="-561">x_reboot &gt;= reboot_time+LIMIT*time_overflows</label>
+			<label kind="assignment" x="-1870" y="-535">reboot()</label>
+		</transition>
+		<transition>
+			<source ref="id22"/>
+			<target ref="id17"/>
+			<label kind="guard" x="-1895" y="-629">x2&gt;=reboot_length</label>
+			<label kind="assignment" x="-1887" y="-603">x_reboot:=0</label>
+			<nail x="-1734" y="-603"/>
+			<nail x="-1963" y="-603"/>
+		</transition>
+		<transition>
+			<source ref="id21"/>
+			<target ref="id18"/>
+			<label kind="synchronisation" x="-2048" y="-374">login_success[ip]!</label>
+		</transition>
+		<transition>
+			<source ref="id15"/>
+			<target ref="id19"/>
+			<label kind="synchronisation" x="-1700" y="-144">report!</label>
+			<nail x="-1810" y="-119"/>
+		</transition>
+		<transition>
+			<source ref="id16"/>
+			<target ref="id19"/>
+			<label kind="guard" x="-1734" y="-221">attack_attempts&gt;=10</label>
+			<label kind="assignment" x="-1700" y="-187">x2:=0</label>
+			<nail x="-1572" y="-195"/>
+			<nail x="-1768" y="-195"/>
+		</transition>
+		<transition>
+			<source ref="id20"/>
+			<target ref="id16"/>
+			<label kind="guard" x="-1419" y="-442">x2&gt;=1</label>
+			<nail x="-1275" y="-416"/>
+			<nail x="-1530" y="-416"/>
+		</transition>
+		<transition>
+			<source ref="id19"/>
+			<target ref="id16"/>
+			<label kind="select" x="-1717" y="-348">ip_sel:bot_ip_t</label>
+			<label kind="guard" x="-1691" y="-331">x2&gt;=1</label>
+			<label kind="assignment" x="-1725" y="-306">target_ip:=ip_sel,
+x2:=0,
+attack_attempts:=0</label>
+		</transition>
+		<transition>
+			<source ref="id16"/>
+			<target ref="id20"/>
+			<label kind="select" x="-1462" y="-365">cd_sel:credentials_t</label>
+			<label kind="guard" x="-1462" y="-348">attack_attempts&lt;10</label>
+			<label kind="synchronisation" x="-1487" y="-331">dictionary_attack[target_ip]!</label>
+			<label kind="assignment" x="-1462" y="-306">target_cd:=cd_sel,
+x2:=0,
+exploit_credential(target_cd)</label>
+		</transition>
+		<transition>
+			<source ref="id20"/>
+			<target ref="id15"/>
+			<label kind="synchronisation" x="-1462" y="-144">login_success[target_ip]?</label>
+			<label kind="assignment" x="-1445" y="-119">victim_id:=target_ip</label>
+			<nail x="-1275" y="-119"/>
+		</transition>
+		<transition>
+			<source ref="id17"/>
+			<target ref="id21"/>
+			<label kind="guard" x="-2048" y="-493">credential_match()</label>
+			<label kind="synchronisation" x="-2048" y="-476">dictionary_attack[ip]?</label>
+		</transition>
+		<transition>
+			<source ref="id18"/>
+			<target ref="id19"/>
+			<label kind="synchronisation" x="-1989" y="-331">load_binary[ip]?</label>
+			<label kind="assignment" x="-1955" y="-306">x2:=0</label>
+		</transition>
+	</template>
+	<system>MIRAI_BLCK = Mirai_Blacknet();
 BOT_DF = Bot_Default(0,110);
-
-BOT1 = Bot_t1(1,101);
-BOT2 = Bot_t1(2,103);
-BOT3 = Bot_t1(3,102);
-BOT4 = Bot_t1(4,107);
-BOT5 = Bot_t1(5,122);
-BOT6 = Bot_t1(6,102);
-BOT7 = Bot_t1(7,152);
-BOT8 = Bot_t1(8,142);
-BOT9 = Bot_t1(9,115);
-BOT10 = Bot_t1(10,109);
-
-BOT11 = Bot_t1(11,158);
-BOT12 = Bot_t1(12,105);
-BOT13 = Bot_t1(13,139);
-BOT14 = Bot_t1(14,111);
-BOT15 = Bot_t1(15,145);
-BOT16 = Bot_t1(16,154);
-BOT17 = Bot_t1(17,121);
-BOT18 = Bot_t1(18,144);
-BOT19 = Bot_t1(19,154);
-BOT20 = Bot_t1(20,144);
-
-BOT21 = Bot_t1(21,114);
-BOT22 = Bot_t1(22,132);
-BOT23 = Bot_t1(23,149);
-BOT24 = Bot_t1(24,124);
-BOT25 = Bot_t1(25,151);
-BOT26 = Bot_t1(26,131);
-BOT27 = Bot_t1(27,133);
-BOT28 = Bot_t1(28,150);
-BOT29 = Bot_t1(29,118);
-BOT30 = Bot_t1(30,142);
-
-BOT31 = Bot_t1(31,139);
-BOT32 = Bot_t1(32,125);
-BOT33 = Bot_t1(33,113);
-BOT34 = Bot_t1(34,148);
-BOT35 = Bot_t1(35,141);
-BOT36 = Bot_t1(36,115);
-BOT37 = Bot_t1(37,104);
-BOT38 = Bot_t1(38,141);
-BOT39 = Bot_t1(39,150);
-BOT40 = Bot_t1(40,136);
-
-BOT41 = Bot_t1(41,154);
-BOT42 = Bot_t1(42,150);
-BOT43 = Bot_t1(43,136);
-BOT44 = Bot_t1(44,152);
-BOT45 = Bot_t1(45,157);
-BOT46 = Bot_t1(46,105);
-BOT47 = Bot_t1(47,135);
-BOT48 = Bot_t1(48,116);
-BOT49 = Bot_t1(49,161);
-BOT50 = Bot_t1(50,122);
-
-BOT51 = Bot_t1(51,108);
-BOT52 = Bot_t1(52,128);
-BOT53 = Bot_t1(53,128);
-BOT54 = Bot_t1(54,159);
-BOT55 = Bot_t1(55,106);
-BOT56 = Bot_t1(56,157);
-BOT57 = Bot_t1(57,108);
-BOT58 = Bot_t1(58,116);
-BOT59 = Bot_t1(59,104);
-BOT60 = Bot_t1(60,146);
-
-BOT61 = Bot_t1(61,145);
-BOT62 = Bot_t1(62,134);
-BOT63 = Bot_t1(63,122);
-BOT64 = Bot_t1(64,160);
-BOT65 = Bot_t1(65,150);
-BOT66 = Bot_t1(66,132);
-BOT67 = Bot_t1(67,107);
-BOT68 = Bot_t1(68,119);
-BOT69 = Bot_t1(69,125);
-BOT70 = Bot_t1(70,148);
-
-BOT71 = Bot_t1(71,149);
-BOT72 = Bot_t1(72,101);
-BOT73 = Bot_t1(73,135);
-BOT74 = Bot_t1(74,134);
-BOT75 = Bot_t1(75,118);
-BOT76 = Bot_t1(76,128);
-BOT77 = Bot_t1(77,136);
-BOT78 = Bot_t1(78,114);
-BOT79 = Bot_t1(79,137);
-BOT80 = Bot_t1(80,162);
-
-BOT81 = Bot_t1(81,115);
-BOT82 = Bot_t1(82,129);
-BOT83 = Bot_t1(83,147);
-BOT84 = Bot_t1(84,135);
-BOT85 = Bot_t1(85,116);
-BOT86 = Bot_t1(86,142);
-BOT87 = Bot_t1(87,123);
-BOT88 = Bot_t1(88,118);
-BOT89 = Bot_t1(89,148);
-BOT90 = Bot_t1(90,121);
-
-BOT91 = Bot_t1(91,147);
-BOT92 = Bot_t1(92,161);
-BOT93 = Bot_t1(93,104);
-BOT94 = Bot_t1(94,142);
-BOT95 = Bot_t1(95,127);
-BOT96 = Bot_t1(96,126);
-BOT97 = Bot_t1(97,154);
-BOT98 = Bot_t1(98,136);
-BOT99 = Bot_t1(99,101);
-BOT100 = Bot_t1(100,128);
-
-
-// List one or more processes to be composed into a system.
-system MIRAI_BLCK, BOT_DF, 
-BOT1, BOT2, BOT3, BOT4, BOT5, BOT6, BOT7, BOT8, BOT9, BOT10,
-BOT11, BOT12, BOT13, BOT14, BOT15, BOT16, BOT17, BOT18, BOT19, BOT20,
-BOT21, BOT22, BOT23, BOT24, BOT25, BOT26, BOT27, BOT28, BOT29, BOT30,
-BOT31, BOT32, BOT33, BOT34, BOT35, BOT36, BOT37, BOT38, BOT39, BOT40,
-BOT41, BOT42, BOT43, BOT44, BOT45, BOT46, BOT47, BOT48, BOT49, BOT50,
-BOT51, BOT52, BOT53, BOT54, BOT55, BOT56, BOT57, BOT58, BOT59, BOT60,
-BOT61, BOT62, BOT63, BOT64, BOT65, BOT66, BOT67, BOT68, BOT69, BOT70,
-BOT71, BOT72, BOT73, BOT74, BOT75, BOT76, BOT77, BOT78, BOT79, BOT80,
-BOT81, BOT82, BOT83, BOT84, BOT85, BOT86, BOT87, BOT88, BOT89, BOT90,
-BOT91, BOT92, BOT93, BOT94, BOT95, BOT96, BOT97, BOT98, BOT99, BOT100;
-//************************************************
-//Gantt Chart
-//************************************************
-
-gantt {
-    
-//========================SERVERS========================
-    Servers_Active:     MIRAI_BLCK.Listening_Mode -&gt; Color_Blue;
- 
-//============================BOTs===============================
-    BOT_DF_Scanning:    BOT_DF.Telnet_Port_Scan -&gt; Color_LOrange;
-    BOT_DF_Attacking:   BOT_DF.Attack_Attempted -&gt; Color_Red; 
-
-    BOT_1_safe:         BOT1.Connected -&gt; Color_Green;
-    BOT_1_Scanning:     BOT1.Telnet_Port_Scan -&gt; Color_LOrange;
-    BOT_1_Attacking:    BOT1.Attack_Attempted -&gt; Color_Red;
-
-    BOT_2_safe:         BOT2.Connected -&gt; Color_Green;
-    BOT_2_Scanning:     BOT2.Telnet_Port_Scan -&gt; Color_LOrange;
-    BOT_2_Attacking:    BOT2.Attack_Attempted -&gt; Color_Red;
-
-    BOT_3_safe:         BOT3.Connected -&gt; Color_Green;
-    BOT_3_Scanning:     BOT3.Telnet_Port_Scan -&gt; Color_LOrange;
-    BOT_3_Attacking:    BOT3.Attack_Attempted -&gt; Color_Red;
-
-    BOT_4_safe:         BOT4.Connected -&gt; Color_Green;
-    BOT_4_Scanning:     BOT4.Telnet_Port_Scan -&gt; Color_LOrange;
-    BOT_4_Attacking:    BOT4.Attack_Attempted -&gt; Color_Red;
-
-    BOT_5_safe:         BOT5.Connected -&gt; Color_Green;
-    BOT_5_Scanning:     BOT5.Telnet_Port_Scan -&gt; Color_LOrange;
-    BOT_5_Attacking:    BOT5.Attack_Attempted -&gt; Color_Red;
-}</system>
+BOT1 = Bot_t2(1,150,6,360,0,279,0);
+BOT2 = Bot_t2(2,141,6,360,0,211,0);
+BOT3 = Bot_t2(3,148,6,360,0,323,0);
+BOT4 = Bot_t2(4,103,6,360,0,287,0);
+BOT5 = Bot_t2(5,143,6,360,0,242,0);
+BOT6 = Bot_t2(6,139,6,360,0,347,0);
+BOT7 = Bot_t2(7,116,6,360,0,320,0);
+BOT8 = Bot_t2(8,142,6,360,0,155,0);
+BOT9 = Bot_t2(9,147,6,360,0,2,0);
+BOT10 = Bot_t2(10,153,6,360,0,296,0);
+system MIRAI_BLCK, BOT_DF, BOT1, BOT2, BOT3, BOT4, BOT5, BOT6, BOT7, BOT8, BOT9, BOT10;
+</system>
 	<queries>
 		<query>
 			<formula>A[] total_time==50 imply current_number_bots+==total_devices-1</formula>
@@ -796,7 +751,11 @@ gantt {
 			<comment></comment>
 		</query>
 		<query>
-			<formula>simulate [total_time&lt;=5000; 1] {message_loops*LIMIT + total_messages} : current_number_bots==total_devices-1</formula>
+			<formula>simulate [total_time&lt;=500; 1] {BOT9.Rebooting}</formula>
+			<comment></comment>
+		</query>
+		<query>
+			<formula>simulate [total_time&lt;=500; 1] {current_number_bots}</formula>
 			<comment></comment>
 		</query>
 		<query>
