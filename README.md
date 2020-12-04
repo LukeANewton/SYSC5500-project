@@ -8,8 +8,8 @@ This is the term project for SYSC5500 (Designing Secure Networking and Computer 
 ## Repository Structure
 - the **project-proposal** folder contains our original project proposal and associated files
 - the **progress-presentation** folder contains the progress presentation delivered halfway through the project, along with a snapshot of the model and data analysis at the time of the presentation
-- **Mirai_botnet_0.9.xml** is our Timed Automata based model of the Mirai botnet for use in [UPPAAL](http://www.uppaal.org/)
-- **botnet-model<span></span>-ideas.md** contains a list of what data is interesting to collect from the model, and possible extensions to the project
+- the **final-presentation** folder contains the final presentation delivered at end of the project
+- the **data-analysis** folder contains the version of the model used for final presentation and final report results, scripts written to aid in generating results, and the experiment results themselves
 - **Slide_Format_DarkRED.pptx** is the formatting for the slides of the progress and final presentations
 
 ## References
