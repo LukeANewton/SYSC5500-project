@@ -64,11 +64,14 @@ ax = set_graph(BOTNET_SIZE_NAME,
           'proportion devices infected' if CALCULATE_PROPORTION else 'devices infected')
 for d in data:
     ax.plot(d[0][:, 0], 
-           d[0][:, 1]/NUMBER_DEVICES if CALCULATE_PROPORTION else d[0][:, 1])
+           d[0][:, 1]/NUMBER_DEVICES if CALCULATE_PROPORTION else d[0][:, 1],
+           label=str(int(max(d[0][:, 1])))+" devices")
+plt.legend()
 plt.show()
 
 ax = set_graph(MESSAGE_PASSING_NAME, 'total messages sent')
 for d in data:
-    ax.plot(d[1][:, 0], d[1][:, 1])
+    ax.plot(d[1][:, 0], d[1][:, 1], label=str(int(max(d[0][:, 1])))+" devices")
+plt.legend()
 plt.show()
 
