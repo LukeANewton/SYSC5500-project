@@ -99,7 +99,6 @@ void NEW_ATTEMPT(){
     }
 }
 
-
 //***********************************************************
 //Gantt Color Codes
 //***********************************************************
@@ -217,8 +216,7 @@ void exploit_credential(credentials_t target_cd){
 			<target ref="id4"/>
 			<label kind="select" x="348" y="-161">ip_sel:bot_ip_t</label>
 			<label kind="guard" x="372" y="-144">x1&gt;=1</label>
-			<label kind="assignment" x="321" y="-119">NEW_SCAN(),
-target_ip:=ip_sel,
+			<label kind="assignment" x="321" y="-119">target_ip:=ip_sel,
 x1:=0,
 attack_attempts:=0</label>
 		</transition>
@@ -228,8 +226,7 @@ attack_attempts:=0</label>
 			<label kind="select" x="603" y="-178">cd_sel:credentials_t</label>
 			<label kind="guard" x="603" y="-161">attack_attempts&lt;10</label>
 			<label kind="synchronisation" x="576" y="-144">dictionary_attack[target_ip]!</label>
-			<label kind="assignment" x="603" y="-119">NEW_ATTEMPT(),
-target_cd:=cd_sel,
+			<label kind="assignment" x="603" y="-119">target_cd:=cd_sel,
 x1:=0,
 exploit_credential(target_cd)</label>
 		</transition>
@@ -360,7 +357,7 @@ exploit_credential(target_cd)</label>
 	</template>
 	<template>
 		<name>Bot_t2</name>
-		<parameter>const bot_id_t ip, const credentials_t credentials, const int reboot_length, const int reboot_period, int reboot_time</parameter>
+		<parameter>const bot_id_t ip, const credentials_t credentials, const int reboot_length, const int_t reboot_period, const int period_overflows, int_t reboot_time, int time_overflows</parameter>
 		<declaration>clock x2, x_reboot;
 int[0, 10] attack_attempts;
 bot_ip_t target_ip;
@@ -379,6 +376,7 @@ void reboot(){
     x2:=0;
     in_botnet[ip] := false;
     reboot_time:=reboot_period;
+    time_overflows:=period_overflows;
 }</declaration>
 		<location id="id15" x="-1530" y="-119">
 			<name x="-1589" y="-102">Attack_Successful</name>
@@ -390,7 +388,7 @@ void reboot(){
 		</location>
 		<location id="id17" x="-2057" y="-535">
 			<name x="-2091" y="-527">Connected</name>
-			<label kind="invariant" x="-2133" y="-518">x_reboot&lt;=reboot_time</label>
+			<label kind="invariant" x="-2184" y="-518">x_reboot&lt;=reboot_time+LIMIT*time_overflows</label>
 		</location>
 		<location id="id18" x="-2057" y="-306">
 			<name x="-2091" y="-289">Vulnerable</name>
@@ -398,12 +396,12 @@ void reboot(){
 		<location id="id19" x="-1810" y="-306">
 			<name x="-1869" y="-340">Telnet_Port_Scan</name>
 			<label kind="invariant" x="-1861" y="-297">x2&lt;=1 &amp;&amp;
- x_reboot&lt;=reboot_time</label>
+x_reboot&lt;=reboot_time+LIMIT*time_overflows</label>
 		</location>
 		<location id="id20" x="-1275" y="-306">
 			<name x="-1326" y="-289">Attack_Attempted</name>
 			<label kind="invariant" x="-1266" y="-272">x2&lt;=1 &amp;&amp;
-x_reboot&lt;=reboot_time</label>
+x_reboot&lt;=reboot_time+LIMIT*time_overflows</label>
 		</location>
 		<location id="id21" x="-2057" y="-416">
 			<name x="-2108" y="-399">Login_Successful</name>
@@ -417,7 +415,7 @@ x_reboot&lt;=reboot_time</label>
 		<transition>
 			<source ref="id20"/>
 			<target ref="id22"/>
-			<label kind="guard" x="-1453" y="-561">x_reboot &gt;= reboot_time</label>
+			<label kind="guard" x="-1521" y="-561">x_reboot &gt;= reboot_time+LIMIT*time_overflows</label>
 			<label kind="assignment" x="-1428" y="-535">reboot(),
 current_number_bots--</label>
 			<nail x="-1198" y="-535"/>
@@ -425,7 +423,7 @@ current_number_bots--</label>
 		<transition>
 			<source ref="id19"/>
 			<target ref="id22"/>
-			<label kind="guard" x="-1802" y="-416">x_reboot &gt;= reboot_time</label>
+			<label kind="guard" x="-1802" y="-416">x_reboot &gt;= reboot_time+LIMIT*time_overflows</label>
 			<label kind="assignment" x="-1802" y="-399">reboot(),
 current_number_bots--</label>
 			<nail x="-1810" y="-442"/>
@@ -433,7 +431,7 @@ current_number_bots--</label>
 		<transition>
 			<source ref="id17"/>
 			<target ref="id22"/>
-			<label kind="guard" x="-1921" y="-552">x_reboot &gt;= reboot_time</label>
+			<label kind="guard" x="-1989" y="-561">x_reboot &gt;= reboot_time+LIMIT*time_overflows</label>
 			<label kind="assignment" x="-1870" y="-535">reboot()</label>
 		</transition>
 		<transition>
@@ -513,106 +511,106 @@ exploit_credential(target_cd)</label>
 	</template>
 	<system>MIRAI_BLCK = Mirai_Blacknet();
 BOT_DF = Bot_Default(0,110);
-BOT1 = Bot_t1(1,162);
-BOT2 = Bot_t1(2,127);
-BOT3 = Bot_t1(3,128);
-BOT4 = Bot_t1(4,134);
-BOT5 = Bot_t1(5,147);
-BOT6 = Bot_t1(6,161);
-BOT7 = Bot_t1(7,155);
-BOT8 = Bot_t1(8,134);
-BOT9 = Bot_t1(9,139);
-BOT10 = Bot_t1(10,133);
-BOT11 = Bot_t1(11,130);
-BOT12 = Bot_t1(12,151);
-BOT13 = Bot_t1(13,114);
+BOT1 = Bot_t1(1,110);
+BOT2 = Bot_t1(2,118);
+BOT3 = Bot_t1(3,139);
+BOT4 = Bot_t1(4,125);
+BOT5 = Bot_t1(5,122);
+BOT6 = Bot_t1(6,113);
+BOT7 = Bot_t1(7,152);
+BOT8 = Bot_t1(8,147);
+BOT9 = Bot_t1(9,144);
+BOT10 = Bot_t1(10,152);
+BOT11 = Bot_t1(11,136);
+BOT12 = Bot_t1(12,110);
+BOT13 = Bot_t1(13,126);
 BOT14 = Bot_t1(14,137);
-BOT15 = Bot_t1(15,128);
-BOT16 = Bot_t1(16,101);
-BOT17 = Bot_t1(17,134);
-BOT18 = Bot_t1(18,113);
-BOT19 = Bot_t1(19,113);
-BOT20 = Bot_t1(20,144);
-BOT21 = Bot_t1(21,118);
-BOT22 = Bot_t1(22,126);
-BOT23 = Bot_t1(23,152);
-BOT24 = Bot_t1(24,110);
-BOT25 = Bot_t1(25,150);
-BOT26 = Bot_t1(26,141);
-BOT27 = Bot_t1(27,135);
-BOT28 = Bot_t1(28,119);
-BOT29 = Bot_t1(29,134);
-BOT30 = Bot_t1(30,158);
-BOT31 = Bot_t1(31,104);
-BOT32 = Bot_t1(32,156);
-BOT33 = Bot_t1(33,112);
-BOT34 = Bot_t1(34,111);
-BOT35 = Bot_t1(35,146);
-BOT36 = Bot_t1(36,123);
-BOT37 = Bot_t1(37,162);
-BOT38 = Bot_t1(38,114);
-BOT39 = Bot_t1(39,161);
-BOT40 = Bot_t1(40,132);
-BOT41 = Bot_t1(41,140);
-BOT42 = Bot_t1(42,132);
-BOT43 = Bot_t1(43,133);
-BOT44 = Bot_t1(44,132);
-BOT45 = Bot_t1(45,152);
-BOT46 = Bot_t1(46,117);
-BOT47 = Bot_t1(47,120);
-BOT48 = Bot_t1(48,110);
-BOT49 = Bot_t1(49,103);
-BOT50 = Bot_t1(50,113);
-BOT51 = Bot_t1(51,153);
-BOT52 = Bot_t1(52,108);
-BOT53 = Bot_t1(53,101);
-BOT54 = Bot_t1(54,124);
-BOT55 = Bot_t1(55,121);
-BOT56 = Bot_t1(56,120);
-BOT57 = Bot_t1(57,111);
-BOT58 = Bot_t1(58,132);
-BOT59 = Bot_t1(59,124);
-BOT60 = Bot_t1(60,150);
-BOT61 = Bot_t1(61,135);
-BOT62 = Bot_t1(62,161);
-BOT63 = Bot_t1(63,126);
-BOT64 = Bot_t1(64,102);
-BOT65 = Bot_t1(65,116);
-BOT66 = Bot_t1(66,120);
-BOT67 = Bot_t1(67,133);
-BOT68 = Bot_t1(68,154);
-BOT69 = Bot_t1(69,110);
-BOT70 = Bot_t1(70,158);
-BOT71 = Bot_t1(71,149);
-BOT72 = Bot_t1(72,139);
-BOT73 = Bot_t1(73,122);
-BOT74 = Bot_t1(74,114);
-BOT75 = Bot_t1(75,132);
-BOT76 = Bot_t1(76,117);
-BOT77 = Bot_t1(77,152);
-BOT78 = Bot_t1(78,123);
-BOT79 = Bot_t1(79,138);
-BOT80 = Bot_t1(80,116);
-BOT81 = Bot_t1(81,122);
-BOT82 = Bot_t1(82,141);
-BOT83 = Bot_t1(83,119);
-BOT84 = Bot_t1(84,114);
-BOT85 = Bot_t1(85,147);
-BOT86 = Bot_t1(86,140);
-BOT87 = Bot_t1(87,129);
-BOT88 = Bot_t1(88,101);
-BOT89 = Bot_t1(89,126);
-BOT90 = Bot_t1(90,111);
-BOT91 = Bot_t1(91,152);
-BOT92 = Bot_t1(92,127);
-BOT93 = Bot_t1(93,110);
-BOT94 = Bot_t1(94,117);
-BOT95 = Bot_t1(95,125);
-BOT96 = Bot_t1(96,108);
-BOT97 = Bot_t1(97,110);
-BOT98 = Bot_t1(98,162);
-BOT99 = Bot_t1(99,133);
-BOT100 = Bot_t1(100,150);
+BOT15 = Bot_t1(15,151);
+BOT16 = Bot_t1(16,126);
+BOT17 = Bot_t1(17,138);
+BOT18 = Bot_t1(18,147);
+BOT19 = Bot_t1(19,159);
+BOT20 = Bot_t1(20,101);
+BOT21 = Bot_t1(21,161);
+BOT22 = Bot_t1(22,106);
+BOT23 = Bot_t1(23,129);
+BOT24 = Bot_t1(24,101);
+BOT25 = Bot_t1(25,120);
+BOT26 = Bot_t1(26,134);
+BOT27 = Bot_t1(27,127);
+BOT28 = Bot_t1(28,149);
+BOT29 = Bot_t1(29,138);
+BOT30 = Bot_t1(30,148);
+BOT31 = Bot_t1(31,122);
+BOT32 = Bot_t1(32,143);
+BOT33 = Bot_t1(33,133);
+BOT34 = Bot_t1(34,160);
+BOT35 = Bot_t1(35,152);
+BOT36 = Bot_t1(36,158);
+BOT37 = Bot_t1(37,138);
+BOT38 = Bot_t1(38,112);
+BOT39 = Bot_t1(39,159);
+BOT40 = Bot_t1(40,107);
+BOT41 = Bot_t1(41,129);
+BOT42 = Bot_t1(42,142);
+BOT43 = Bot_t1(43,162);
+BOT44 = Bot_t1(44,153);
+BOT45 = Bot_t1(45,137);
+BOT46 = Bot_t1(46,128);
+BOT47 = Bot_t1(47,114);
+BOT48 = Bot_t1(48,160);
+BOT49 = Bot_t1(49,126);
+BOT50 = Bot_t1(50,115);
+BOT51 = Bot_t1(51,124);
+BOT52 = Bot_t1(52,112);
+BOT53 = Bot_t1(53,112);
+BOT54 = Bot_t1(54,151);
+BOT55 = Bot_t1(55,102);
+BOT56 = Bot_t1(56,135);
+BOT57 = Bot_t1(57,116);
+BOT58 = Bot_t1(58,136);
+BOT59 = Bot_t1(59,114);
+BOT60 = Bot_t1(60,107);
+BOT61 = Bot_t1(61,123);
+BOT62 = Bot_t1(62,138);
+BOT63 = Bot_t1(63,150);
+BOT64 = Bot_t1(64,162);
+BOT65 = Bot_t1(65,136);
+BOT66 = Bot_t1(66,137);
+BOT67 = Bot_t1(67,140);
+BOT68 = Bot_t1(68,108);
+BOT69 = Bot_t1(69,118);
+BOT70 = Bot_t1(70,106);
+BOT71 = Bot_t1(71,131);
+BOT72 = Bot_t1(72,132);
+BOT73 = Bot_t1(73,133);
+BOT74 = Bot_t1(74,157);
+BOT75 = Bot_t1(75,124);
+BOT76 = Bot_t1(76,101);
+BOT77 = Bot_t1(77,109);
+BOT78 = Bot_t1(78,122);
+BOT79 = Bot_t1(79,112);
+BOT80 = Bot_t1(80,101);
+BOT81 = Bot_t1(81,128);
+BOT82 = Bot_t1(82,143);
+BOT83 = Bot_t1(83,153);
+BOT84 = Bot_t1(84,132);
+BOT85 = Bot_t1(85,116);
+BOT86 = Bot_t1(86,122);
+BOT87 = Bot_t1(87,135);
+BOT88 = Bot_t1(88,151);
+BOT89 = Bot_t1(89,140);
+BOT90 = Bot_t1(90,121);
+BOT91 = Bot_t1(91,121);
+BOT92 = Bot_t1(92,135);
+BOT93 = Bot_t1(93,133);
+BOT94 = Bot_t1(94,135);
+BOT95 = Bot_t1(95,153);
+BOT96 = Bot_t1(96,133);
+BOT97 = Bot_t1(97,137);
+BOT98 = Bot_t1(98,124);
+BOT99 = Bot_t1(99,148);
+BOT100 = Bot_t1(100,151);
 system MIRAI_BLCK, BOT_DF, BOT1, BOT2, BOT3, BOT4, BOT5, BOT6, BOT7, BOT8, BOT9, BOT10, BOT11, BOT12, BOT13, BOT14, BOT15, BOT16, BOT17, BOT18, BOT19, BOT20, BOT21, BOT22, BOT23, BOT24, BOT25, BOT26, BOT27, BOT28, BOT29, BOT30, BOT31, BOT32, BOT33, BOT34, BOT35, BOT36, BOT37, BOT38, BOT39, BOT40, BOT41, BOT42, BOT43, BOT44, BOT45, BOT46, BOT47, BOT48, BOT49, BOT50, BOT51, BOT52, BOT53, BOT54, BOT55, BOT56, BOT57, BOT58, BOT59, BOT60, BOT61, BOT62, BOT63, BOT64, BOT65, BOT66, BOT67, BOT68, BOT69, BOT70, BOT71, BOT72, BOT73, BOT74, BOT75, BOT76, BOT77, BOT78, BOT79, BOT80, BOT81, BOT82, BOT83, BOT84, BOT85, BOT86, BOT87, BOT88, BOT89, BOT90, BOT91, BOT92, BOT93, BOT94, BOT95, BOT96, BOT97, BOT98, BOT99, BOT100;
 </system>
 	<queries>

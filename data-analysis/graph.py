@@ -57,6 +57,7 @@ def set_graph(name, y_axis_label):
     plt.xlabel('time')  
     plt.title(name)
     plt.grid()
+    
     return plt.axes()
     
 
@@ -67,11 +68,13 @@ for d in data:
            d[0][:, 1]/NUMBER_DEVICES if CALCULATE_PROPORTION else d[0][:, 1],
            label=str(int(max(d[0][:, 1])))+" devices")
 plt.legend()
+ax.set_xlim(0, 1000)
 plt.show()
 
 ax = set_graph(MESSAGE_PASSING_NAME, 'total messages sent')
 for d in data:
     ax.plot(d[1][:, 0], d[1][:, 1], label=str(int(max(d[0][:, 1])))+" devices")
 plt.legend()
+ax.set_xlim(0, 1000)
 plt.show()
 
