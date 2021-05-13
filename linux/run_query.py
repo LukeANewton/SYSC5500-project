@@ -38,7 +38,7 @@ os.rename(MODEL_NAME, NEW_MODEL_NAME)
 
 # call the python helper file to edit model system declaration
 set_num_devices(NUMBER_DEVICES, PROPORTION_ALWAYS_ON, PROPORTION_PERIODIC_REBOOT, REBOOT_LENGTH, REBOOT_PERIOD,
-                NUMBER_CREDENTIALS)
+                NUMBER_CREDENTIALS, NEW_MODEL_NAME)
 
 # create a query file
 QUERY_NAME = 'query.q'
@@ -50,9 +50,11 @@ with open(QUERY_NAME, "w") as file:
 # make a folder to move all output CSVs, along with a copy of the model and query used
 directory_name = str(datetime.now())
 os.mkdir(directory_name)
-copyfile(os.getcwd()+'/'+NEW_MODEL_NAME, os.getcwd()+'/'+directory_name+'/'+NEW_MODEL_NAME)
-copyfile(os.getcwd()+'/'+QUERY_NAME, os.getcwd()+'/'+directory_name+'/'+QUERY_NAME)
+copyfile(os.getcwd() + '/' + NEW_MODEL_NAME, os.getcwd() + '/' + directory_name + '/' + NEW_MODEL_NAME)
+copyfile(os.getcwd() + '/' + QUERY_NAME, os.getcwd() + '/' + directory_name + '/' + QUERY_NAME)
 
 # run the verifier query
 os.system('./verifier/verifyta -H 29 -S 3 -O csv ' + directory_name + '/' + NEW_MODEL_NAME
           + ' ' + directory_name + '/' + QUERY_NAME)
+
+os.rename(NEW_MODEL_NAME, MODEL_NAME)

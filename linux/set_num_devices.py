@@ -26,7 +26,7 @@ import sys
 
 
 def set_num_devices(number_devices, proportion_always_on, proportion_periodic_reboot, reboot_length, reboot_period,
-                    number_credentials):
+                    number_credentials, model_name):
     assert proportion_always_on + proportion_periodic_reboot == 1
 
     # this is necessary because UPPAAL integers are 16bit signed
@@ -34,12 +34,7 @@ def set_num_devices(number_devices, proportion_always_on, proportion_periodic_re
     period_overflows = reboot_period // LIMIT
     reboot_period = reboot_period % LIMIT
     # ------------------------------------------------------------
-    #                 Step 1: get the model file
-    # ------------------------------------------------------------
-    model_name = sys.argv[7]
-
-    # ------------------------------------------------------------
-    #          Step 2: build system declaration string
+    #          Step 1: build system declaration string
     # ------------------------------------------------------------
 
     # this is the part of model initialization that does not change based on the number of bots
@@ -76,7 +71,7 @@ def set_num_devices(number_devices, proportion_always_on, proportion_periodic_re
     init_string = init_string.replace(';', ';\n')
 
     # ------------------------------------------------------------
-    #     Step 3: insert system declaration into model file
+    #     Step 2: insert system declaration into model file
     # ------------------------------------------------------------
 
     # read in file
