@@ -1,1 +1,0 @@
-simulate [total_time<=60480; 1] {current_number_bots, message_loops*LIMIT + total_messages}

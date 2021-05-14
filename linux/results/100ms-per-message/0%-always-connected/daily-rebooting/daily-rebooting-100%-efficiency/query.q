@@ -1,1 +1,0 @@
-simulate [total_time<=6048000; 1] {current_number_bots}
