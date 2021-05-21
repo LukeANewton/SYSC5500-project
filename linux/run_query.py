@@ -10,7 +10,7 @@ from shutil import copyfile
 MODEL_NAME = 'Mirai_blacknet_1.0.xml'
 QUERY_NAME = 'messages-and-bot-size.q'
 
-NUMBER_DEVICES = 100
+NUMBER_DEVICES = 1000
 
 # proportions should sum to one, this is checked in the python script
 PROPORTION_ALWAYS_ON = 0
@@ -54,7 +54,7 @@ with open(directory_name + '/' + QUERY_NAME, "w") as file:
                (' : current_number_bots==total_devices-1' if STOP_WHEN_ALL_INFECTED else ''))
 
 # run the verifier query
-command = './verifier/verifyta -A -T -S 0 -O csv \'' + directory_name + '/' + NEW_MODEL_NAME + '\' \'' + directory_name + '/' + QUERY_NAME + '\''
+command = './verifier/verifyta -T -S 3 -O csv \'' + directory_name + '/' + NEW_MODEL_NAME + '\' \'' + directory_name + '/' + QUERY_NAME + '\''
 print('running: ' + command)
 start_time = time.time()
 os.system(command)
