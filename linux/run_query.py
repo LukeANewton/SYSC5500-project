@@ -50,7 +50,7 @@ copyfile(os.getcwd() + '/' + NEW_MODEL_NAME, os.getcwd() + '/' + directory_name 
 QUERY_NAME = 'query.q'
 with open(directory_name + '/' + QUERY_NAME, "w") as file:
     file.write('simulate [total_time<=' + str(SIMULATION_TIME) + '; ' + str(SIMULATION_RUNS) +
-               '] {current_number_bots, message_loops*LIMIT + total_messages}' +
+               '] {current_number_bots, 2*((message_loops+scan_loops)*LIMIT + total_messages + total_scans)}' +
                (' : current_number_bots==total_devices-1' if STOP_WHEN_ALL_INFECTED else ''))
 
 # run the verifier query
