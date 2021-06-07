@@ -38,7 +38,7 @@ def set_num_devices(number_devices, proportion_always_on, proportion_periodic_re
     # ------------------------------------------------------------
 
     # this is the part of model initialization that does not change based on the number of bots
-    init_string = "MIRAI_BLCK = Mirai_Blacknet();BOT_DF = Bot_Default(0,110);"
+    init_string = "MIRAI_BLCK = CnC();BOT_DF = Bot_Default(0,110);"
 
     # add the always-connected devices first with random selected credentials
     num_always_connected_devices = math.floor(proportion_always_on * (number_devices + 1))
