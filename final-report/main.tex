@@ -1,0 +1,154 @@
+\documentclass[conference]{IEEEtran}
+
+% ==============================================PACKAGES============================================
+\usepackage{listings}
+\usepackage{xspace}
+\usepackage[all]{xy}
+\usepackage{textcomp}
+\usepackage{csquotes}
+
+\usepackage{tabularx}
+\usepackage{array}
+\usepackage{rotating}
+
+\usepackage{xcolor}
+\usepackage{colortbl}
+\usepackage{graphicx}
+\usepackage{float}
+
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{algorithmic}
+% ==================================================================================================
+
+\def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
+    T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
+    
+    
+\begin{document}
+
+% ============================================MACROS================================================
+\input{Macros/Review_Macros}
+\input{Macros/UPPAAL_macros}
+% ==================================================================================================
+
+
+
+
+% =============================================TITLE================================================
+\title{Analyzing the Impact of Rebooting and Network Degradation on IoT Botnets using Timed Automata}
+% ==================================================================================================
+
+
+% ============================================AUTHORS===============================================
+\author{\IEEEauthorblockN{Alvi Jawad, Luke Newton\\}
+    \IEEEauthorblockA{Systems and Computer Engineering Department \\
+    Carleton University, Ottawa, Ontario \\
+    \{alvi.jawad, luke.newton\}@carleton.ca \\
+    }
+}
+% ==================================================================================================
+
+
+
+\maketitle
+
+
+
+% ============================================Abstract==============================================
+\begin{abstract}
+\fontsize{10pt}{12pt}\selectfont
+\label{abstract}
+% Begin Section
+\input{Contents/Abstract}
+% End Section
+\end{abstract}
+% ==================================================================================================
+
+
+% ============================================KEYWORDS==============================================
+\begin{IEEEkeywords}
+\fontsize{10pt}{12pt}\selectfont
+Internet of Things (IoT), Botnets, Network Security, Modeling and Simulation, Timed Automata, Impact Analysis, Rebooting, UPPAAL
+\end{IEEEkeywords}
+% ==================================================================================================
+
+
+
+
+
+% ============================================CONTENTS==============================================
+\section{Introduction}
+\fontsize{10pt}{12pt}\selectfont
+\label{sec:introduction}
+% Begin Section
+\input{Contents/Introduction}
+% End Section
+
+\section{Background}
+\fontsize{10pt}{12pt}\selectfont
+\label{sec:background}
+% Begin Section
+\input{Contents/Background}
+% End Section
+
+\section{Botnets in IoT}
+\fontsize{10pt}{12pt}\selectfont
+\label{sec:botnets}
+% Begin Section
+\input{Contents/Botnets}
+% End Section
+
+\section{Modeling the Infection Process}
+\fontsize{10pt}{12pt}\selectfont
+\label{sec:modeling}
+% Begin Section
+\input{Contents/Modeling}
+% End Section
+
+\section{Experimental Results}
+\fontsize{10pt}{12pt}\selectfont
+\label{sec:experimental_results}
+% Begin Section
+\input{Contents/Experimental_Results}
+% End Section
+
+\section{Discussion}
+\fontsize{10pt}{12pt}\selectfont
+\label{sec:discussion}
+% Begin Section
+\input{Contents/Discussion}
+% End Section
+
+\section{Challenges Faced}
+\fontsize{10pt}{12pt}\selectfont
+\label{sec:challenges}
+% Begin Section
+\input{Contents/Challenges}
+% End Section
+
+\section{Related Work}
+\fontsize{10pt}{12pt}\selectfont
+\label{sec:literature_review}
+% Begin Section
+\input{Contents/Literature_Review}
+% End Section
+
+\section{Conclusion}
+\fontsize{10pt}{12pt}\selectfont
+\label{sec:conclusion}
+% Begin Section
+\input{Contents/Conclusion}
+% End Section
+% ==================================================================================================
+
+
+
+
+% ==========================================REFERENCES==============================================
+\fontsize{10pt}{12pt}\selectfont
+\bibliographystyle{ieeetr}
+\bibliography{citations}
+% ==================================================================================================
+
+
+\end{document}

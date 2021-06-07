@@ -1,0 +1,33 @@
+% ======================================== What are botnets? =========================================
+Botnets are one of the major security issues faced in the current IoT landscape~\cite{silva2013_Botnet_Survey}. Recent years have seen considerable growth in both original and different variants of botnets, causing a significant impact on various aspects of IoT networks~\cite{kolias2017_Mirai_DDoS}. This section summarizes the impact of recent botnet attacks and explores the threat landscape of modern IoT networks.
+\par
+
+% Start Subsection***********************************************************************************
+\subsection{The Impact of Botnets}
+\label{sub:impact_of_botnets}
+% ====================================== Recent botnet attacks =======================================
+A botnet is a network of devices compromised by malware that can be instructed by a botmaster through a Command and Control (C\&C) infrastructure. Although individual bots in an IoT botnet do not pose a threat, a large enough botnet can have catastrophic impacts. One prime example of this is the Mirai botnet, which launched Distributed Denial of Service (DDoS) attacks against security blog KrebsOnSecurity and French cloud computing company OVH, with malicious traffic peaking at 620 Gbps and 1.1 Tbps respectively in 2016~\cite{kolias2017_Mirai_DDoS}. More recently, the largest ever DDoS attack was targeted at Amazon Web Services in February 2020, which saw sustained traffic at 2.3 Tbps~\cite{cloudflare_DDoS}.
+\par
+Contrary to the majority of exploits involving DDoS attacks, botnets are not limited to DDoS attacks alone. The following lists several malicious capabilities of botnets~\cite{kolias2017_Mirai_DDoS, silva2013_Botnet_Survey}:
+\begin{enumerate}
+    \item DDoS: A large enough botnet can flood network endpoints or links with enough traffic to severely degrade or completely disallow legitimate traffic through the targeted location.
+    \item General bot traffic: Continuous communication and propagation consumes network bandwidth and can result in decreased performance in infected devices.
+    \item Spam or Malware dissemination: Rather than sending all bot traffic to one location like in a DDoS attack, botnets can also be used to distribute malicious payloads to a wide variety of targets.
+    \item Firmware corruption: Botnets like BrickerBot, once commanded, can access and destroy a device's firmware.
+\end{enumerate}
+% End Subsection**************************************************************************************
+
+
+% Start Subsection***********************************************************************************
+\subsection{The Threat to IoT}
+\label{sub:threat_to_iot}
+% =========================== Why should we care? (threats to our network) ===========================
+
+% old version:
+%IoT, with its sheer number of vulnerable connected devices, has become a tempting target for botmasters. At its peak, Mirai may have held up to 400,000 connected devices, hinting at a small picture of what could happen if all of these infected devices were used simultaneously to perform an attack~\cite{kolias2017_Mirai_DDoS}. The relatively low computational resources of inexpensive IoT devices imply the lack of built-in measures to protect against malware~\cite{bertino2017_Botnets_IoT}. Off-the-shelf IoT devices are rarely designed with security in mind, and the use of lightweight operating systems and network protocols means that the device and its communications are inherently vulnerable to various attacks. Moreover, a large proportion of IoT devices are deployed with their initial configuration and easily guessable weak and/or default credentials, and the embedded nature of these devices can make it challenging, often impossible, to patch vulnerabilities. All of these come together to make IoT devices ideal candidates for botnet infection and present a greater need to explore alternatives to the defenses conventional computers would typically employ.
+
+IoT, with its sheer number of vulnerable connected devices, has become a tempting target for botmasters. At its peak, Mirai may have held up to 400,000 connected devices, hinting at a small picture of what could happen if all of these infected devices were used simultaneously to perform an attack~\cite{kolias2017_Mirai_DDoS}. Off-the-shelf IoT devices are rarely designed with security in mind, and their relatively low computational resources mean that defenses used by more conventional computers, such as anti-malware software, are not feasible to implement. Moreover, a large proportion of IoT devices are deployed with their initial configuration and easily guessable weak and/or default credentials, and the embedded nature of these devices can make it challenging, often impossible, to patch vulnerabilities. All of these come together to make IoT devices ideal candidates for botnet infection and present a greater need for research into botnet behaviors and the evaluation of possible defenses.
+\par
+% ============================= Why are we looking at rebooting? =============================
+Rebooting has been suggested as an effective defensive mechanism to control the spread of botnets~\cite{tanaka2019_PN_Botnet}. While botnets can be used by the botmasters for their sole gain, they can also lend the attacking capabilities of a large-enough botnet to external interested parties in exchange for something valuable~\cite{kolias2017_Mirai_DDoS}. The precondition behind this contract is the possession of a large attack-capable botnet and the maintainability of the botnet size over an extended period. One core theme of our analysis of the botnet infection process is to see whether rebooting alone is capable of preventing the attacker from amassing and/or maintaining their attacking capability over a certain period. If so, we wish to see what rate of rebooting is the most effective and whether such a frequency is feasible for an actual IoT device.
+% End Subsection**************************************************************************************

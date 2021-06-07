@@ -1,0 +1,13 @@
+% ================================= What did we gain through this?  ===================================
+% In this project, we designed and implemented a model of the Mirai botnet using timed automata in UPPAAL in order to observe how botnet growth is impacted in various scenarios. Device rebooting is shown to be ineffective at reducing the spread of the botnet unless performed at levels which would degrade the functionality of the IoT device network. Both decreased network speed and level of botnet activity are shown to make a botnet more susceptible to this use of rebooting as a defense.
+% \par
+% While our hardware and operating system constraints put some limit on the complexity we were able to study, the existing model is highly scalable. Access to more powerful hardware and an alternative operating system such as Linux would allow larger and faster networks to be studied with the same level of accuracy.
+
+%\mynote{2}{\underline{COPIED FROM INTRO:} The knowledge gained through this study will allow one to reinforce their understanding of the botnet infection process as well as identify areas of limited understanding. Additionally, they will gain insight into the effectiveness and viability of rebooting and weigh it against other available defensive measures to provide suitable recommendations.}
+
+In this project, we developed a timed automata model of the Mirai botnet in UPPAAL and observed the infection rate and interactions between individual botnet entities. Additionally, we considered clusters of different device types and simulated large networks of such clusters to see the influence of different device distributions. Finally, we examined the impact of rebooting on both stealthy and active botnets to determine the frequency of rebooting capable of curbing the botnet growth.
+\par
+Our analysis shows that device rebooting, by itself, is ineffective at reducing the spread of botnets unless performed at a level that would degrade the performance of a device or the availability of the IoT network. The level of botnet activity, as well as decreased network speed, are shown to be notable factors that affect the maintainability of a large botnet over an extended period. While the breadth of our analysis was limited by the available hardware, the existing model is highly scalable and allows for easy adjustment of parameters to simulate myriads of scenarios.
+\par
+In future work, we aim to explore the effectiveness and viability of other suggested solutions in a network consisting of over ten thousand devices. In particular, we wish to see the impact of patching as well as how the inclusion of devices with limited battery lifespan affect our analysis.
+

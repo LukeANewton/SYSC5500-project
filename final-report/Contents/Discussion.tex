@@ -1,0 +1,26 @@
+% Not needed: This section discusses the experimental results and their implications for the design of IoT networks.
+
+% =====================================  Reboot Frequency ======================================
+% \subsection{Impact of Rebooting on Botnet Size}
+% \label{sub:rebooting_impact}
+
+We can see from Table~\ref{table:rebooting} that for the more realistic network RTT of 100ms, the botnet size consistently remains very high even with frequent rebooting. This is a major problem for the high availability requirement of IoT networks, as even with network devices offline about 17\% of the time, the botnet is still able to infect above 80\% of devices. This frequency of rebooting is likely already undesirable for many IoT applications, with more frequent rebooting only further degrading the functionality of the uninfected devices. It is, therefore, evident that rebooting on its own is not effective as a primary defense against botnets; something more preventative such as blocking ports or changing default credentials would likely be much more effective.
+
+% =====================================  Stealthy vs Active ======================================
+% \subsection{Stealthy vs Active Botnet Size}
+% \label{sub:stealthing_impact}
+\par
+The fact that a botnet can effectively hide its malicious presence on a network by simply remaining idle yet still commanding a large number of bots to perform an attack anytime is extremely concerning. In our experiments, where a botnet remains idle 99\% of the time on a network with one second RTT and hourly rebooting, the botnet cannot effectively spread, showing that stealthy botnets can be thwarted with these basic defenses. However, the level of botnet activity is outside the control of the IoT network designer, and without pertinent information, should not be expected to be low.
+
+% =====================================  Network Speed ======================================
+% \subsection{Impact of Network Speed on Botnet Size}
+% \label{sub:network_speed_impact}
+Both Table~\ref{table:rebooting} and Table~\ref{table:stealthing} show how network speed affects the growth of a botnet in various scenarios. In Table~\ref{table:rebooting}, the slower one second RTT network with very frequent rebooting is able to slow the botnet growth to an average size that may not be enough to perform an effective attack, while the slower network in Table~\ref{table:stealthing} is able to completely stop the stealthiest botnet in its tracks. It may be possible for a network designer to throttle their network to curb botnet spread, but this will impede the IoT network capability bringing us back to the security vs. performance issue. A network with one second RTT will likely not provide the level of service necessary for the IoT devices to perform as intended and thus cannot be considered a suitable defense against botnets.
+
+% old version
+%Both Table~\ref{table:rebooting} and Table~\ref{table:stealthing} show how network speed affects the growth of a botnet in various scenarios. A sufficiently slow network is shown in Table~\ref{table:rebooting} to lower the botnet size to a less severe value that may not be enough to perform an effective attack, while Table~\ref{table:stealthing} shows that a slow enough network can stop a stealthy botnet in its tracks. It may be possible for a network designer to throttle their network to curb botnet spread, but this will impede the IoT network capability bringing us back to the security vs. performance issue. A network with one second RTT will likely not provide the level of service necessary for the IoT devices to perform as intended and thus cannot be considered a suitable defense against botnets.
+\par
+%\mynote{3}{What about other experiments performed?}
+
+
+Networks with different distributions of \AC and \RC devices did not produce significantly different results. Battery-operated devices were also considered, but these typically have lifespans too long to simulate with our current limitations.

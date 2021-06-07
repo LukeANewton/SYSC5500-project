@@ -1,0 +1,17 @@
+% %====================================
+% \subsection{Studies on the Botnet Infection Process}
+% \label{sub:studies_botnet_infection_process}
+The Mirai botnet has been studied in great detail in \cite{kolias2017_Mirai_DDoS, kambourakis2017mirai, Antonakakis2017_USENIX_Mirai_First_Study}, forming the basis of our developed model.~\cite{kolias2017_Mirai_DDoS} and~\cite{Antonakakis2017_USENIX_Mirai_First_Study} describe the roles of bots and each component of the botnet infrastructure, while~\cite{kambourakis2017mirai} gives an in-depth description of the specific activities each infected bot performs in propagating the malware. The information gained from these three studies allowed us to accurately depict each component of the botnet infrastructure and their interactions to observe and examine the botnet behavior.
+
+%====================================
+% \subsection{Modelling Attempts}
+% \label{sub:other_botnet_models}
+The general infection process of botnets has been modeled using various other modeling formalisms.~\cite{tanaka2017modeling} and~\cite{tanaka2019_PN_Botnet} use agent-oriented Petri nets to model the Mirai and Hajime botnets, exploring the possibility of using rebooting and Hajime as an innocuous botnet to reduce the Mirai infection rate. Both botnets are, however, modeled only as black box entities without modeling the underlying infrastructure, and the scalability of such an approach is limited as the authors fail to extend the network beyond 25 nodes. Epidemiological approaches, such as~\cite{kephart1993epidemiological} and~\cite{jerkins2018epidemiological}, effectively model time, but are limited in the amount of detail that can be modeled. Other attempts involve the use of game theory, machine learning, and economic models~\cite{wainwright2019_Botnet_Models}. Our approach aims to combine the benefits, in particular, of Petri Nets and Epidemiological models, by providing considerations for time and concurrency while also presenting an extensible model with a fine-grained level of adjustable detail.
+\par
+%====================================
+
+%====================================
+% \subsection{Other Methods of Study}
+% \label{sub:other_methods_of_study}
+Other approaches to study botnets involve collecting data from real-world network traffic and devices, including the use of honeypots~\cite{Antonakakis2017_USENIX_Mirai_First_Study, silva2013_Botnet_Survey}, DNS traffic logs~\cite{Antonakakis2017_USENIX_Mirai_First_Study, feily2009botnet_detection}, tracing DDoS attacks back to their source~\cite{Antonakakis2017_USENIX_Mirai_First_Study}, and scanning for devices with bot-like behavior~\cite{Antonakakis2017_USENIX_Mirai_First_Study, feily2009botnet_detection, herwig2019hajime, acarali2016http_botnets}. These methods have the benefit of generating real-world data, which can lead to potentially more accurate results. However, the data collection process requires time and violates ethical considerations, making those approaches out of scope for this project.
+%====================================
