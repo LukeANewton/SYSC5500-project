@@ -6,7 +6,7 @@
 //***********************************************************
 clock total_time;                                            // universal clock for total simulated time
 
-const int total_devices =16;                                 // the number of devices in the network
+const int total_devices =11;                                 // the number of devices in the network
 const int timeout = 10;                                      // the maximum amount of time to wait for a login response
 const int LIMIT = 32000;                                     // the maximum value for counting before whe need to roll over the counter
 
@@ -746,111 +746,18 @@ CNC = CnC_Server();
 RPT = Report_Server();
 LDR = Loader();
 BOT_DF = Bot_Default(0,110);
-BOT1 = Bot_t2(1,156,600,4000,1,16184,0);
-BOT2 = Bot_t2(2,145,600,4000,1,17470,0);
-BOT3 = Bot_t2(3,128,600,4000,1,9759,0);
-BOT4 = Bot_t2(4,118,600,4000,1,30882,0);
-BOT5 = Bot_t2(5,148,600,4000,1,2497,1);
-BOT6 = Bot_t2(6,107,600,4000,1,1382,0);
-BOT7 = Bot_t2(7,134,600,4000,1,29030,0);
-BOT8 = Bot_t2(8,147,600,4000,1,8843,0);
-BOT9 = Bot_t2(9,103,600,4000,1,15467,0);
-BOT10 = Bot_t2(10,157,600,4000,1,23458,0);
-BOT11 = Bot_t2(11,146,600,4000,1,22035,0);
-BOT12 = Bot_t2(12,149,600,4000,1,11864,0);
-BOT13 = Bot_t2(13,130,600,4000,1,17038,0);
-BOT14 = Bot_t2(14,141,600,4000,1,250,1);
-BOT15 = Bot_t2(15,120,600,4000,1,11045,0);
-
-
-system BM, CNC, RPT, LDR, BOT_DF, BOT1, BOT2, BOT3, BOT4, BOT5, BOT6, BOT7, BOT8, BOT9, BOT10, BOT11, BOT12, BOT13, BOT14, BOT15;
-
-gantt {
-    
-//========================SERVERS========================
-    CnC_Idle:              CNC.Idle -&gt; Color_Blue;
-    Loading_Binary:        LDR.Loading -&gt; Color_Purple;
-
-//============================BOTs===============================
-    BOT_DF_Scanning:    BOT_DF.Telnet_Port_Scan -&gt; Color_LOrange;
-    BOT_DF_Attacking:   BOT_DF.Attack_Attempted -&gt; Color_Red; 
-
-    BOT_1_safe:         BOT1.Connected -&gt; Color_Green;
-    BOT_1_Vulnerable:   BOT1.Vulnerable -&gt; Color_Purple;
-    BOT_1_Scanning:     BOT1.Telnet_Port_Scan -&gt; Color_LOrange;
-    BOT_1_Attacking:    BOT1.Attack_Attempted -&gt; Color_Red;
-
-    BOT_2_safe:         BOT2.Connected -&gt; Color_Green;
-    BOT_2_Vulnerable:   BOT2.Vulnerable -&gt; Color_Purple;
-    BOT_2_Scanning:     BOT2.Telnet_Port_Scan -&gt; Color_LOrange;
-    BOT_2_Attacking:    BOT2.Attack_Attempted -&gt; Color_Red;
-
-    BOT_3_safe:         BOT3.Connected -&gt; Color_Green;
-    BOT_3_Vulnerable:   BOT3.Vulnerable -&gt; Color_Purple;
-    BOT_3_Scanning:     BOT3.Telnet_Port_Scan -&gt; Color_LOrange;
-    BOT_3_Attacking:    BOT3.Attack_Attempted -&gt; Color_Red;
-
-    BOT_4_safe:         BOT4.Connected -&gt; Color_Green;
-    BOT_1_Vulnerable:   BOT4.Vulnerable -&gt; Color_Purple;
-    BOT_4_Scanning:     BOT4.Telnet_Port_Scan -&gt; Color_LOrange;
-    BOT_4_Attacking:    BOT4.Attack_Attempted -&gt; Color_Red;
-
-    BOT_5_safe:         BOT5.Connected -&gt; Color_Green;
-    BOT_5_Vulnerable:   BOT5.Vulnerable -&gt; Color_Purple;
-    BOT_5_Scanning:     BOT5.Telnet_Port_Scan -&gt; Color_LOrange;
-    BOT_5_Attacking:    BOT5.Attack_Attempted -&gt; Color_Red;
-
-    BOT_6_safe:         BOT6.Connected -&gt; Color_Green;
-    BOT_6_Vulnerable:   BOT6.Vulnerable -&gt; Color_Purple;
-    BOT_6_Scanning:     BOT6.Telnet_Port_Scan -&gt; Color_LOrange;
-    BOT_6_Attacking:    BOT6.Attack_Attempted -&gt; Color_Red;
-
-    BOT_7_safe:         BOT7.Connected -&gt; Color_Green;
-    BOT_7_Vulnerable:   BOT7.Vulnerable -&gt; Color_Purple;
-    BOT_7_Scanning:     BOT7.Telnet_Port_Scan -&gt; Color_LOrange;
-    BOT_7_Attacking:    BOT7.Attack_Attempted -&gt; Color_Red;
-
-    BOT_8_safe:         BOT8.Connected -&gt; Color_Green;
-    BOT_5_Vulnerable:   BOT8.Vulnerable -&gt; Color_Purple;
-    BOT_8_Scanning:     BOT8.Telnet_Port_Scan -&gt; Color_LOrange;
-    BOT_8_Attacking:    BOT8.Attack_Attempted -&gt; Color_Red;
-
-    BOT_9_safe:         BOT9.Connected -&gt; Color_Green;
-    BOT_9_Vulnerable:   BOT9.Vulnerable -&gt; Color_Purple;
-    BOT_9_Scanning:     BOT9.Telnet_Port_Scan -&gt; Color_LOrange;
-    BOT_9_Attacking:    BOT9.Attack_Attempted -&gt; Color_Red;
-
-    BOT_10_safe:         BOT10.Connected -&gt; Color_Green;
-    BOT_10_Vulnerable:   BOT10.Vulnerable -&gt; Color_Purple;
-    BOT_10_Scanning:     BOT10.Telnet_Port_Scan -&gt; Color_LOrange;
-    BOT_10_Attacking:    BOT10.Attack_Attempted -&gt; Color_Red;
-
-    BOT_11_safe:         BOT11.Connected -&gt; Color_Green;
-    BOT_11_Vulnerable:   BOT11.Vulnerable -&gt; Color_Purple;
-    BOT_11_Scanning:     BOT11.Telnet_Port_Scan -&gt; Color_LOrange;
-    BOT_11_Attacking:    BOT11.Attack_Attempted -&gt; Color_Red;
-
-    BOT_12_safe:         BOT12.Connected -&gt; Color_Green;
-    BOT_12_Vulnerable:   BOT12.Vulnerable -&gt; Color_Purple;
-    BOT_12_Scanning:     BOT12.Telnet_Port_Scan -&gt; Color_LOrange;
-    BOT_12_Attacking:    BOT12.Attack_Attempted -&gt; Color_Red;
-
-    BOT_13_safe:         BOT13.Connected -&gt; Color_Green;
-    BOT_13_Vulnerable:   BOT13.Vulnerable -&gt; Color_Purple;
-    BOT_13_Scanning:     BOT13.Telnet_Port_Scan -&gt; Color_LOrange;
-    BOT_13_Attacking:    BOT13.Attack_Attempted -&gt; Color_Red;
-
-    BOT_14_safe:         BOT14.Connected -&gt; Color_Green;
-    BOT_14_Vulnerable:   BOT14.Vulnerable -&gt; Color_Purple;
-    BOT_14_Scanning:     BOT14.Telnet_Port_Scan -&gt; Color_LOrange;
-    BOT_14_Attacking:    BOT14.Attack_Attempted -&gt; Color_Red;
-
-    BOT_15_safe:         BOT15.Connected -&gt; Color_Green;
-    BOT_15_Vulnerable:   BOT15.Vulnerable -&gt; Color_Purple;
-    BOT_15_Scanning:     BOT15.Telnet_Port_Scan -&gt; Color_LOrange;
-    BOT_15_Attacking:    BOT15.Attack_Attempted -&gt; Color_Red;
-
-}</system>
+BOT1 = Bot_t2(1,154,600,4000,1,1272,0);
+BOT2 = Bot_t2(2,115,600,4000,1,11891,0);
+BOT3 = Bot_t2(3,119,600,4000,1,22888,0);
+BOT4 = Bot_t2(4,113,600,4000,1,9382,0);
+BOT5 = Bot_t2(5,108,600,4000,1,26988,0);
+BOT6 = Bot_t2(6,134,600,4000,1,2955,1);
+BOT7 = Bot_t2(7,153,600,4000,1,21194,0);
+BOT8 = Bot_t2(8,103,600,4000,1,4149,0);
+BOT9 = Bot_t2(9,153,600,4000,1,21627,0);
+BOT10 = Bot_t2(10,140,600,4000,1,26014,0);
+system BM, CNC, RPT, LDR, BOT_DF, BOT1, BOT2, BOT3, BOT4, BOT5, BOT6, BOT7, BOT8, BOT9, BOT10;
+</system>
 	<queries>
 		<query>
 			<formula>A[] total_time==50 imply current_number_bots+==total_devices-1</formula>
