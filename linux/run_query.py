@@ -10,7 +10,7 @@ from shutil import copyfile
 MODEL_NAME = 'Mirai_blacknet_1.0.xml'
 QUERY_NAME = 'messages-and-bot-size.q'
 
-NUMBER_DEVICES = 1000
+NUMBER_DEVICES = 100
 
 # proportions should sum to one, this is checked in the python script
 PROPORTION_ALWAYS_ON = 0
@@ -50,7 +50,7 @@ copyfile(os.getcwd() + '/' + NEW_MODEL_NAME, os.getcwd() + '/' + directory_name 
 QUERY_NAME = 'query.q'
 with open(directory_name + '/' + QUERY_NAME, "w") as file:
     file.write('simulate [total_time<=' + str(SIMULATION_TIME) + '; ' + str(SIMULATION_RUNS) +
-               '] {current_number_bots, 2*((message_loops+scan_loops)*LIMIT + total_messages + total_scans)}' +
+               '] {current_number_bots, 2*((attempt_loops+scan_loops)*LIMIT + total_attempts + total_scans)}' +
                (' : current_number_bots==total_devices-1' if STOP_WHEN_ALL_INFECTED else ''))
 
 # run the verifier query

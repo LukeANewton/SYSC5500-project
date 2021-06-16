@@ -92,7 +92,7 @@ def set_num_devices(number_devices, proportion_always_on, proportion_periodic_re
     start = contents.find('const int total_devices =') + len('const int total_devices =')
     end = contents.find(';', start)
     contents = contents.replace(contents[start:end], str(number_devices + 1), 1)
-
+    print(contents[start:end])
     # ------------------------------------------------------------
     #           Step 5: write new file contents
     # ------------------------------------------------------------
