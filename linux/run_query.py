@@ -10,7 +10,7 @@ from shutil import copyfile
 MODEL_NAME = 'model.xml'
 QUERY_NAME = 'messages-and-bot-size.q'
 
-NUMBER_DEVICES = 10
+NUMBER_DEVICES = 100
 
 # proportions should sum to one, this is checked in the python script
 PROPORTION_ALWAYS_ON = 0
@@ -49,7 +49,7 @@ with open(directory_name + '/' + QUERY_NAME, "w") as file:
                (' : current_number_bots==total_devices-1' if STOP_WHEN_ALL_INFECTED else ''))
 
 # run the verifier query
-command = './verifier/verifyta -T -S 3 -O csv \'' + directory_name + '/' + MODEL_NAME + '\' \'' + directory_name + '/' + QUERY_NAME + '\''
+command = './verifier/verifyta -o 2 -C -S 3 -O csv \'' + directory_name + '/' + MODEL_NAME + '\' \'' + directory_name + '/' + QUERY_NAME + '\''
 print('running: ' + command)
 start_time = time.time()
 os.system(command)
