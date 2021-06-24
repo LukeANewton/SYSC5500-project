@@ -38,7 +38,7 @@ def set_num_devices(number_devices, proportion_always_on, proportion_periodic_re
     # ------------------------------------------------------------
 
     # this is the part of model initialization that does not change based on the number of bots
-    init_string = "CNC=CnC();BOT_DF = Bot_Default(0,110);"
+    init_string = "CNC=CnC();QUEUE=CnC_queue();BOT_DF = Bot_Default(0,110);"
 
     # add the always-connected devices first with random selected credentials
     num_always_connected_devices = math.floor(proportion_always_on * (number_devices + 1))
@@ -58,7 +58,7 @@ def set_num_devices(number_devices, proportion_always_on, proportion_periodic_re
             time_overflows) + ");"
 
     # this part again, does not change based on the number of devices in the network
-    init_string += "system CNC, BOT_DF,"
+    init_string += "system CNC, QUEUE, BOT_DF,"
 
     # append list of instantiated bots to system declaration
     for i in range(1, number_devices):

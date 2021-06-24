@@ -10,7 +10,7 @@ from shutil import copyfile
 MODEL_NAME = 'model.xml'
 QUERY_NAME = 'messages-and-bot-size.q'
 
-NUMBER_DEVICES = 100
+NUMBER_DEVICES = 250
 
 # proportions should sum to one, this is checked in the python script
 PROPORTION_ALWAYS_ON = 0
