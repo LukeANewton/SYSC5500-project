@@ -7,25 +7,25 @@ from shutil import copyfile
 # ------------------------------------------------------------
 #             Step 1: set simulation parameters
 # ------------------------------------------------------------
-MODEL_NAME = 'model.xml'
+MODEL_NAME = 'model-fixed-speed.xml'
 QUERY_NAME = 'messages-and-bot-size.q'
 
-NUMBER_DEVICES = 250
+NUMBER_DEVICES = 500
 
 # proportions should sum to one, this is checked in the python script
-PROPORTION_ALWAYS_ON = 0
-PROPORTION_PERIODIC_REBOOT = 1
+PROPORTION_ALWAYS_ON = 1
+PROPORTION_PERIODIC_REBOOT = 0
 
 # these values are only relevant for devices that reboot periodically
-REBOOT_LENGTH = 600
-REBOOT_PERIOD = 36000
+REBOOT_LENGTH = 120
+REBOOT_PERIOD = 7200
 
 NUMBER_CREDENTIALS = 62
 
-SIMULATION_TIME = 864000
+SIMULATION_TIME = 864000#REBOOT_PERIOD*2#864000
 SIMULATION_RUNS = 1
 
-STOP_WHEN_ALL_INFECTED = False
+STOP_WHEN_ALL_INFECTED = True
 
 # ------------------------------------------------------------
 #             Step 2: edit model files and run simulation

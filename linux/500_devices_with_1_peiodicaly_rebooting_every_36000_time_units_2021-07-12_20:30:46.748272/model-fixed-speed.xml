@@ -1,0 +1,1465 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE nta PUBLIC '-//Uppaal Team//DTD Flat System 1.1//EN' 'http://www.it.uu.se/research/group/darts/uppaal/flat-1_2.dtd'>
+<nta>
+	<declaration>//***********************************************************
+// Variables
+//***********************************************************
+clock total_time;                                            // universal clock for total simulated time
+
+const int total_devices =501;                                 // the number of devices in the network
+const int timeout = 10;                                      // the maximum amount of time to wait for a login response
+const int LIMIT = 32000;                                     // the maximum value for counting before whe need to roll over the counter
+
+typedef int[1, total_devices] bot_id_t;                      // possible values for bot ids (akin to ip addresses)
+typedef int[1, total_devices-1] bot_ip_t;                    // possible IP addresses excluding the default bot IP (0)
+typedef int[101, 162] credentials_t;                         // possible values for credentials (akin to username/password combination)
+typedef int[0, LIMIT] int_t;
+
+urgent broadcast chan setup; //New
+urgent broadcast chan new_infected[total_devices]; //New
+urgent broadcast chan command_new[total_devices]; //New
+urgent broadcast chan activate_loader; //New
+urgent broadcast chan activate_first;                        // a channel to activate the first bot
+urgent broadcast chan report;                                // a channel to notfy the CnC that there is a new device to infect
+urgent broadcast chan dictionary_attack[total_devices];      // a channel for each device representing the attempted login on that device
+urgent broadcast chan login_success[total_devices];          // a channel for each device representing the a successful login response to the attacking bot
+broadcast chan load_binary[total_devices];                   // a channel for each device representing the command to begin secondary infection
+
+int[0, total_devices] current_number_bots = 0;               // the number of infected devices at any given time
+bool in_botnet[total_devices];                               // the list of currently infected bot IDs (the index value is the device id and the value indicates if the device is in the botnet)
+
+credentials_t credential_attempt[total_devices];             // a list to represent passing credentials from attacking bot to device under attack
+
+bot_id_t victim_queue[total_devices];                        // a list of devices to be infected
+int [0, total_devices] victim_queue_length = 0;              // the number of devices currently waiting to be infected
+
+int scan_loops = 0;
+int_t total_scans = 0;
+int attempt_loops = 0;
+int_t total_attempts = 0;
+
+bot_id_t new_vict_id; //New
+bot_id_t vict_id; //New
+
+//***********************************************************
+// Functions
+//***********************************************************
+
+
+
+
+
+/******** Start a new cycle for messages, scans, and attack attempts whenever they exceed a certain LIMIT *********/
+
+// the total number of messages is:
+//             2*((LIMIT*scan_loops)+total_scans + (LIMIT*attempt_loops)+total_attempts)
+
+void NEW_SCAN(){
+    if (total_scans&lt;LIMIT){
+        total_scans++;
+        return;
+    } else {
+        scan_loops++;                //one full cycle has been completed
+        total_scans=1;               //start counting from 1 again after a full cycle of 25000 scans
+        return;
+    }
+}
+
+void NEW_ATTEMPT(){
+    if (total_attempts&lt;LIMIT){
+        total_attempts++;
+        return;
+    } else {
+        attempt_loops++;             //one full cycle has been completed
+        total_attempts=1;            //start counting from 1 again after a full cycle of 25000 attempts
+        return;
+    }
+}
+
+//***********************************************************
+// Gantt Color Codes
+//***********************************************************
+const int Color_Blue = 2;
+const int Color_LBlue = 18;
+const int Color_Cyan = 9;
+
+const int Color_Purple = 3;
+const int Color_DPurple = 20;
+
+const int Color_Green = 8;
+const int Color_LGreen = 24;
+
+const int Color_Red = 0;
+const int Color_Pink = 12;
+
+const int Color_Orange = 5;
+const int Color_LOrange = 14;
+const int Color_Yellow = 6;</declaration>
+	<template>
+		<name>Botmaster</name>
+		<location id="id0" x="-110" y="8">
+			<name x="-127" y="-26">Initial</name>
+			<committed/>
+		</location>
+		<location id="id1" x="51" y="8">
+			<name x="9" y="-26">Setup_Servers</name>
+		</location>
+		<init ref="id0"/>
+		<transition>
+			<source ref="id0"/>
+			<target ref="id1"/>
+			<label kind="synchronisation" x="-51" y="-17">setup!</label>
+		</transition>
+	</template>
+	<template>
+		<name>CnC_Server</name>
+		<location id="id2" x="-850" y="-1309">
+			<name x="-860" y="-1343">Idle</name>
+		</location>
+		<location id="id3" x="-848" y="-1241">
+			<name x="-865" y="-1232">Initial</name>
+			<committed/>
+		</location>
+		<location id="id4" x="-679" y="-1241">
+			<name x="-697" y="-1232">Active</name>
+		</location>
+		<location id="id5" x="-459" y="-1241">
+			<name x="-501" y="-1232">New_Bot_Found</name>
+			<committed/>
+		</location>
+		<init ref="id2"/>
+		<transition>
+			<source ref="id5"/>
+			<target ref="id4"/>
+			<label kind="synchronisation" x="-646" y="-1334">command_new[vict_id]!</label>
+			<nail x="-459" y="-1309"/>
+			<nail x="-680" y="-1309"/>
+		</transition>
+		<transition>
+			<source ref="id4"/>
+			<target ref="id5"/>
+			<label kind="synchronisation" x="-637" y="-1266">new_infected[vict_id]?</label>
+		</transition>
+		<transition>
+			<source ref="id2"/>
+			<target ref="id3"/>
+			<label kind="synchronisation" x="-841" y="-1292">setup?</label>
+		</transition>
+		<transition>
+			<source ref="id3"/>
+			<target ref="id4"/>
+			<label kind="synchronisation" x="-807" y="-1266">activate_first!</label>
+		</transition>
+	</template>
+	<template>
+		<name>Report_Server</name>
+		<declaration>//***********************************************************
+// Functions for queuing and dequeuing victims for the loader
+//***********************************************************
+void queue_victim(bot_id_t id) {
+    victim_queue[victim_queue_length] := id;
+    victim_queue_length++;
+}
+
+void ADD_RECORD(bot_id_t id){
+    in_botnet[id] := true;
+    current_number_bots += 1;
+}</declaration>
+		<location id="id6" x="-425" y="-25">
+			<name x="-435" y="-59">Idle</name>
+		</location>
+		<location id="id7" x="-297" y="-25">
+			<name x="-323" y="-59">Listening</name>
+		</location>
+		<location id="id8" x="-77" y="-25">
+			<name x="-127" y="-59">Check_Credentials</name>
+			<committed/>
+		</location>
+		<location id="id9" x="153" y="-25">
+			<name x="93" y="-8">New_Victim_Found</name>
+			<committed/>
+		</location>
+		<location id="id10" x="374" y="-25">
+			<name x="315" y="-8">New_Victim_Queued</name>
+			<committed/>
+		</location>
+		<init ref="id6"/>
+		<transition>
+			<source ref="id10"/>
+			<target ref="id7"/>
+			<label kind="synchronisation" x="-8" y="-110">activate_loader!</label>
+			<nail x="374" y="-85"/>
+			<nail x="-297" y="-85"/>
+		</transition>
+		<transition>
+			<source ref="id9"/>
+			<target ref="id10"/>
+			<label kind="assignment" x="188" y="-25">queue_victim(new_vict_id)</label>
+		</transition>
+		<transition>
+			<source ref="id8"/>
+			<target ref="id7"/>
+			<label kind="guard" x="-255" y="8">in_botnet[new_vict_id]</label>
+			<nail x="-77" y="8"/>
+			<nail x="-297" y="8"/>
+		</transition>
+		<transition>
+			<source ref="id8"/>
+			<target ref="id9"/>
+			<label kind="guard" x="-34" y="-51">!in_botnet[new_vict_id]</label>
+			<label kind="assignment" x="-51" y="-25">ADD_RECORD(new_vict_id)</label>
+		</transition>
+		<transition>
+			<source ref="id7"/>
+			<target ref="id8"/>
+			<label kind="synchronisation" x="-212" y="-51">report?</label>
+		</transition>
+		<transition>
+			<source ref="id6"/>
+			<target ref="id7"/>
+			<label kind="synchronisation" x="-382" y="-51">setup?</label>
+		</transition>
+	</template>
+	<template>
+		<name>Loader</name>
+		<declaration>clock loader_x;
+
+//***********************************************************
+// Functions for queuing and dequeuing victims for the loader
+//***********************************************************
+
+bot_id_t get_next_victim() {
+    return victim_queue[--victim_queue_length];
+}
+
+bool victim_queue_empty(){
+    return victim_queue_length == 0;
+}</declaration>
+		<location id="id11" x="-518" y="-59">
+			<name x="-552" y="-93">Standby</name>
+		</location>
+		<location id="id12" x="-297" y="-59">
+			<name x="-323" y="-93">Loading</name>
+			<label kind="invariant" x="-340" y="-42">loader_x&lt;=20</label>
+		</location>
+		<location id="id13" x="-85" y="-59">
+			<name x="-110" y="-93">Loaded</name>
+			<committed/>
+		</location>
+		<location id="id14" x="110" y="-59">
+			<name x="67" y="-93">Check_Queue</name>
+			<urgent/>
+		</location>
+		<init ref="id11"/>
+		<transition>
+			<source ref="id11"/>
+			<target ref="id12"/>
+			<label kind="synchronisation" x="-459" y="-85">activate_loader?</label>
+			<label kind="assignment" x="-484" y="-59">vict_id:=get_next_victim(),
+loader_x:=0</label>
+		</transition>
+		<transition>
+			<source ref="id14"/>
+			<target ref="id12"/>
+			<label kind="guard" x="-153" y="-34">!victim_queue_empty()</label>
+			<label kind="assignment" x="-161" y="-8">vict_id:=get_next_victim(),
+loader_x:=0</label>
+			<nail x="110" y="-8"/>
+			<nail x="-297" y="-8"/>
+		</transition>
+		<transition>
+			<source ref="id14"/>
+			<target ref="id11"/>
+			<label kind="guard" x="-144" y="34">victim_queue_empty()</label>
+			<nail x="144" y="-59"/>
+			<nail x="144" y="59"/>
+			<nail x="-518" y="59"/>
+		</transition>
+		<transition>
+			<source ref="id13"/>
+			<target ref="id14"/>
+			<label kind="synchronisation" x="-59" y="-85">new_infected[vict_id]!</label>
+		</transition>
+		<transition>
+			<source ref="id12"/>
+			<target ref="id13"/>
+			<label kind="guard" x="-238" y="-102">loader_x&gt;=10</label>
+			<label kind="synchronisation" x="-255" y="-85">load_binary[vict_id]!</label>
+		</transition>
+	</template>
+	<template>
+		<name>Bot_Default</name>
+		<parameter>const int ip, const credentials_t credentials</parameter>
+		<declaration>clock x1;
+int[0, 10] attack_attempts;
+bot_ip_t target_ip;
+credentials_t target_cd;
+
+void exploit_credential(credentials_t target_cd){
+    attack_attempts += 1;
+    credential_attempt[target_ip] = target_cd;
+}</declaration>
+		<location id="id15" x="535" y="25">
+			<name x="476" y="42">Attack_Successful</name>
+			<committed/>
+		</location>
+		<location id="id16" x="527" y="-119">
+			<name x="484" y="-154">Victim_Found</name>
+			<committed/>
+		</location>
+		<location id="id17" x="253" y="-119">
+			<name x="194" y="-153">Telnet_Port_Scan</name>
+			<label kind="invariant" x="204" y="-110">x1&lt;=1</label>
+		</location>
+		<location id="id18" x="51" y="-119">
+			<name x="17" y="-153">Inactive</name>
+		</location>
+		<location id="id19" x="782" y="-119">
+			<name x="731" y="-102">Attack_Attempted</name>
+			<label kind="invariant" x="791" y="-85">x1&lt;=1</label>
+		</location>
+		<init ref="id18"/>
+		<transition>
+			<source ref="id15"/>
+			<target ref="id17"/>
+			<label kind="synchronisation" x="365" y="0">report!</label>
+			<label kind="assignment" x="374" y="25">x1:=0</label>
+			<nail x="255" y="25"/>
+		</transition>
+		<transition>
+			<source ref="id16"/>
+			<target ref="id17"/>
+			<label kind="guard" x="331" y="-51">attack_attempts&gt;=10</label>
+			<label kind="assignment" x="365" y="-25">x1:=0</label>
+			<nail x="493" y="-25"/>
+			<nail x="297" y="-25"/>
+		</transition>
+		<transition>
+			<source ref="id19"/>
+			<target ref="id16"/>
+			<label kind="guard" x="638" y="-230">x1&gt;=1</label>
+			<nail x="782" y="-204"/>
+			<nail x="527" y="-204"/>
+		</transition>
+		<transition>
+			<source ref="id17"/>
+			<target ref="id16"/>
+			<label kind="select" x="348" y="-161">ip_sel:bot_ip_t</label>
+			<label kind="guard" x="372" y="-144">x1&gt;=1</label>
+			<label kind="assignment" x="323" y="-119">NEW_SCAN(),
+target_ip:=ip_sel, x1:=0,
+attack_attempts:=0</label>
+		</transition>
+		<transition>
+			<source ref="id16"/>
+			<target ref="id19"/>
+			<label kind="select" x="595" y="-178">cd_sel:credentials_t</label>
+			<label kind="guard" x="595" y="-161">attack_attempts&lt;10</label>
+			<label kind="synchronisation" x="568" y="-144">dictionary_attack[target_ip]!</label>
+			<label kind="assignment" x="561" y="-119">NEW_ATTEMPT(),
+target_cd:=cd_sel, x1:=0,
+exploit_credential(target_cd)</label>
+		</transition>
+		<transition>
+			<source ref="id19"/>
+			<target ref="id15"/>
+			<label kind="synchronisation" x="603" y="-1">login_success[target_ip]?</label>
+			<label kind="assignment" x="612" y="25">new_vict_id:=target_ip</label>
+			<nail x="782" y="25"/>
+		</transition>
+		<transition>
+			<source ref="id18"/>
+			<target ref="id17"/>
+			<label kind="synchronisation" x="93" y="-144">activate_first?</label>
+			<label kind="assignment" x="85" y="-119">in_botnet[0]:=true,
+x1:=0</label>
+		</transition>
+	</template>
+	<template>
+		<name>Bot_t1</name>
+		<parameter>const bot_id_t ip, const credentials_t credentials</parameter>
+		<declaration>clock x2;
+int[0, 10] attack_attempts;
+bot_ip_t target_ip;
+credentials_t target_cd;
+
+bool credential_match(){
+    return credentials == credential_attempt[ip];
+}
+
+void exploit_credential(credentials_t target_cd){
+    attack_attempts += 1;
+    credential_attempt[target_ip] = target_cd;
+}</declaration>
+		<location id="id20" x="-1564" y="-195">
+			<name x="-1623" y="-178">Attack_Successful</name>
+			<committed/>
+		</location>
+		<location id="id21" x="-1564" y="-340">
+			<name x="-1607" y="-375">Victim_Found</name>
+			<committed/>
+		</location>
+		<location id="id22" x="-1844" y="-425">
+			<name x="-1878" y="-459">Connected</name>
+		</location>
+		<location id="id23" x="-2193" y="-340">
+			<name x="-2227" y="-323">Vulnerable</name>
+		</location>
+		<location id="id24" x="-1844" y="-340">
+			<name x="-1904" y="-374">Telnet_Port_Scan</name>
+			<label kind="invariant" x="-1895" y="-331">x2&lt;=1</label>
+		</location>
+		<location id="id25" x="-1309" y="-340">
+			<name x="-1360" y="-323">Attack_Attempted</name>
+			<label kind="invariant" x="-1300" y="-306">x2&lt;=1</label>
+		</location>
+		<location id="id26" x="-2193" y="-425">
+			<name x="-2244" y="-459">Login_Successful</name>
+			<committed/>
+		</location>
+		<location id="id27" x="-2031" y="-340">
+			<name x="-2057" y="-323">Infected</name>
+		</location>
+		<init ref="id22"/>
+		<transition>
+			<source ref="id27"/>
+			<target ref="id24"/>
+			<label kind="synchronisation" x="-2014" y="-365">command_new[vict_id]?</label>
+			<label kind="assignment" x="-1963" y="-340">x2:=0</label>
+		</transition>
+		<transition>
+			<source ref="id26"/>
+			<target ref="id23"/>
+			<label kind="synchronisation" x="-2184" y="-399">login_success[ip]!</label>
+		</transition>
+		<transition>
+			<source ref="id20"/>
+			<target ref="id24"/>
+			<label kind="synchronisation" x="-1734" y="-221">report!</label>
+			<label kind="assignment" x="-1725" y="-195">x2:=0</label>
+			<nail x="-1844" y="-195"/>
+		</transition>
+		<transition>
+			<source ref="id21"/>
+			<target ref="id24"/>
+			<label kind="guard" x="-1768" y="-272">attack_attempts&gt;=10</label>
+			<label kind="assignment" x="-1734" y="-246">x2:=0</label>
+			<nail x="-1606" y="-246"/>
+			<nail x="-1802" y="-246"/>
+		</transition>
+		<transition>
+			<source ref="id25"/>
+			<target ref="id21"/>
+			<label kind="guard" x="-1453" y="-451">x2&gt;=1</label>
+			<nail x="-1309" y="-425"/>
+			<nail x="-1564" y="-425"/>
+		</transition>
+		<transition>
+			<source ref="id24"/>
+			<target ref="id21"/>
+			<label kind="select" x="-1751" y="-382">ip_sel:bot_ip_t</label>
+			<label kind="guard" x="-1725" y="-365">x2&gt;=1</label>
+			<label kind="assignment" x="-1768" y="-340">NEW_SCAN(),
+target_ip:=ip_sel, x2:=0,
+attack_attempts:=0</label>
+		</transition>
+		<transition>
+			<source ref="id21"/>
+			<target ref="id25"/>
+			<label kind="select" x="-1496" y="-399">cd_sel:credentials_t</label>
+			<label kind="guard" x="-1496" y="-382">attack_attempts&lt;10</label>
+			<label kind="synchronisation" x="-1521" y="-365">dictionary_attack[target_ip]!</label>
+			<label kind="assignment" x="-1496" y="-340">NEW_ATTEMPT(),
+target_cd:=cd_sel,
+x2:=0,
+exploit_credential(target_cd)</label>
+		</transition>
+		<transition>
+			<source ref="id25"/>
+			<target ref="id20"/>
+			<label kind="synchronisation" x="-1496" y="-220">login_success[target_ip]?</label>
+			<label kind="assignment" x="-1487" y="-195">new_vict_id:=target_ip</label>
+			<nail x="-1309" y="-195"/>
+		</transition>
+		<transition>
+			<source ref="id22"/>
+			<target ref="id26"/>
+			<label kind="guard" x="-2091" y="-468">credential_match()</label>
+			<label kind="synchronisation" x="-2091" y="-451">dictionary_attack[ip]?</label>
+		</transition>
+		<transition>
+			<source ref="id23"/>
+			<target ref="id27"/>
+			<label kind="synchronisation" x="-2158" y="-366">load_binary[ip]?</label>
+		</transition>
+	</template>
+	<template>
+		<name>Bot_t2</name>
+		<parameter>const bot_id_t ip, const credentials_t credentials, const int reboot_length, const int_t reboot_period, const int period_overflows, int_t reboot_time, int time_overflows</parameter>
+		<declaration>clock x2, x_reboot;
+int[0, 10] attack_attempts;
+bot_ip_t target_ip;
+credentials_t target_cd;
+
+bool credential_match(){
+    return credentials == credential_attempt[ip];
+}
+
+void exploit_credential(credentials_t target_cd){
+    attack_attempts += 1;
+    credential_attempt[target_ip] = target_cd;
+}
+
+void reboot(){
+    x2:=0;
+    in_botnet[ip] := false;
+    reboot_time:=reboot_period;
+    time_overflows:=period_overflows;
+}</declaration>
+		<location id="id28" x="-1530" y="-153">
+			<name x="-1589" y="-136">Attack_Successful</name>
+			<committed/>
+		</location>
+		<location id="id29" x="-1530" y="-306">
+			<name x="-1573" y="-341">Victim_Found</name>
+			<committed/>
+		</location>
+		<location id="id30" x="-2201" y="-501">
+			<name x="-2235" y="-544">Connected</name>
+			<label kind="invariant" x="-2261" y="-493">x_reboot&lt;=reboot_time
++LIMIT*time_overflows</label>
+		</location>
+		<location id="id31" x="-2201" y="-306">
+			<name x="-2235" y="-340">Vulnerable</name>
+			<label kind="invariant" x="-2244" y="-297">x_reboot&lt;=reboot_time
++LIMIT*time_overflows</label>
+		</location>
+		<location id="id32" x="-1810" y="-306">
+			<name x="-1869" y="-340">Telnet_Port_Scan</name>
+			<label kind="invariant" x="-1878" y="-297">x2&lt;=1 &amp;&amp;
+x_reboot&lt;=reboot_time
++LIMIT*time_overflows</label>
+		</location>
+		<location id="id33" x="-1275" y="-306">
+			<name x="-1309" y="-289">Attack_Attempted</name>
+			<label kind="invariant" x="-1266" y="-272">x2&lt;=1 &amp;&amp;
+x_reboot&lt;=reboot_time
++LIMIT*time_overflows</label>
+		</location>
+		<location id="id34" x="-2201" y="-399">
+			<name x="-2252" y="-382">Login_Successful</name>
+			<committed/>
+		</location>
+		<location id="id35" x="-1810" y="-501">
+			<name x="-1836" y="-535">Rebooting</name>
+			<label kind="invariant" x="-1861" y="-493">x2&lt;=reboot_length</label>
+		</location>
+		<location id="id36" x="-2006" y="-306">
+			<name x="-2031" y="-340">Infected</name>
+			<label kind="invariant" x="-2074" y="-297">x_reboot&lt;=reboot_time
++LIMIT*time_overflows</label>
+		</location>
+		<init ref="id30"/>
+		<transition>
+			<source ref="id31"/>
+			<target ref="id35"/>
+			<label kind="guard" x="-2184" y="-238">x_reboot &gt;= reboot_time+
+LIMIT*time_overflows</label>
+			<label kind="assignment" x="-2183" y="-195">reboot(),
+current_number_bots--</label>
+			<nail x="-2201" y="-195"/>
+			<nail x="-1921" y="-195"/>
+		</transition>
+		<transition>
+			<source ref="id36"/>
+			<target ref="id35"/>
+			<label kind="guard" x="-2031" y="-459">x_reboot &gt;= reboot_time+
+LIMIT*time_overflows</label>
+			<label kind="assignment" x="-2031" y="-425">reboot(),
+current_number_bots--</label>
+		</transition>
+		<transition>
+			<source ref="id36"/>
+			<target ref="id32"/>
+			<label kind="synchronisation" x="-1980" y="-331">command_new[vict_id]?</label>
+			<label kind="assignment" x="-1929" y="-306">x2:=0</label>
+		</transition>
+		<transition>
+			<source ref="id33"/>
+			<target ref="id35"/>
+			<label kind="guard" x="-1555" y="-527">x_reboot &gt;= reboot_time+LIMIT*time_overflows</label>
+			<label kind="assignment" x="-1419" y="-501">reboot(),
+current_number_bots--</label>
+			<nail x="-1249" y="-306"/>
+			<nail x="-1249" y="-501"/>
+		</transition>
+		<transition>
+			<source ref="id32"/>
+			<target ref="id35"/>
+			<label kind="guard" x="-1802" y="-416">x_reboot &gt;= reboot_time+LIMIT*time_overflows</label>
+			<label kind="assignment" x="-1802" y="-399">reboot(),
+current_number_bots--</label>
+			<nail x="-1810" y="-442"/>
+		</transition>
+		<transition>
+			<source ref="id30"/>
+			<target ref="id35"/>
+			<label kind="guard" x="-2150" y="-527">x_reboot &gt;= reboot_time+LIMIT*time_overflows</label>
+			<label kind="assignment" x="-2023" y="-501">reboot()</label>
+		</transition>
+		<transition>
+			<source ref="id35"/>
+			<target ref="id30"/>
+			<label kind="guard" x="-2057" y="-586">x2&gt;=reboot_length</label>
+			<label kind="assignment" x="-2040" y="-561">x_reboot:=0</label>
+			<nail x="-1810" y="-561"/>
+			<nail x="-2201" y="-561"/>
+		</transition>
+		<transition>
+			<source ref="id34"/>
+			<target ref="id31"/>
+			<label kind="synchronisation" x="-2193" y="-365">login_success[ip]!</label>
+		</transition>
+		<transition>
+			<source ref="id28"/>
+			<target ref="id32"/>
+			<label kind="synchronisation" x="-1700" y="-178">report!</label>
+			<label kind="assignment" x="-1700" y="-153">x2:=0</label>
+			<nail x="-1810" y="-153"/>
+		</transition>
+		<transition>
+			<source ref="id29"/>
+			<target ref="id32"/>
+			<label kind="guard" x="-1734" y="-238">attack_attempts&gt;=10</label>
+			<label kind="assignment" x="-1700" y="-204">x2:=0</label>
+			<nail x="-1572" y="-212"/>
+			<nail x="-1768" y="-212"/>
+		</transition>
+		<transition>
+			<source ref="id33"/>
+			<target ref="id29"/>
+			<label kind="guard" x="-1419" y="-408">x2&gt;=1</label>
+			<nail x="-1275" y="-382"/>
+			<nail x="-1530" y="-382"/>
+		</transition>
+		<transition>
+			<source ref="id32"/>
+			<target ref="id29"/>
+			<label kind="select" x="-1717" y="-348">ip_sel:bot_ip_t</label>
+			<label kind="guard" x="-1691" y="-331">x2&gt;=1</label>
+			<label kind="assignment" x="-1725" y="-306">NEW_SCAN(),
+target_ip:=ip_sel, x2:=0,
+attack_attempts:=0</label>
+		</transition>
+		<transition>
+			<source ref="id29"/>
+			<target ref="id33"/>
+			<label kind="select" x="-1462" y="-365">cd_sel:credentials_t</label>
+			<label kind="guard" x="-1462" y="-348">attack_attempts&lt;10</label>
+			<label kind="synchronisation" x="-1487" y="-331">dictionary_attack[target_ip]!</label>
+			<label kind="assignment" x="-1487" y="-306">NEW_ATTEMPT(),
+target_cd:=cd_sel, x2:=0,
+exploit_credential(target_cd)</label>
+		</transition>
+		<transition>
+			<source ref="id33"/>
+			<target ref="id28"/>
+			<label kind="synchronisation" x="-1462" y="-178">login_success[target_ip]?</label>
+			<label kind="assignment" x="-1453" y="-153">new_vict_id:=target_ip</label>
+			<nail x="-1275" y="-153"/>
+		</transition>
+		<transition>
+			<source ref="id30"/>
+			<target ref="id34"/>
+			<label kind="guard" x="-2193" y="-450">credential_match()</label>
+			<label kind="synchronisation" x="-2193" y="-433">dictionary_attack[ip]?</label>
+		</transition>
+		<transition>
+			<source ref="id31"/>
+			<target ref="id36"/>
+			<label kind="synchronisation" x="-2150" y="-331">load_binary[ip]?</label>
+		</transition>
+	</template>
+	<system>BM=Botmaster();
+CNC=CnC_Server();
+RPT=Report_Server();
+LDR=Loader();
+BOT_DF=Bot_Default(0,110);
+BOT1 = Bot_t2(1,103,600,4000,1,4166,0);
+BOT2 = Bot_t2(2,117,600,4000,1,23388,0);
+BOT3 = Bot_t2(3,118,600,4000,1,26062,0);
+BOT4 = Bot_t2(4,147,600,4000,1,18685,0);
+BOT5 = Bot_t2(5,121,600,4000,1,21735,0);
+BOT6 = Bot_t2(6,132,600,4000,1,19770,0);
+BOT7 = Bot_t2(7,147,600,4000,1,2025,1);
+BOT8 = Bot_t2(8,135,600,4000,1,21764,0);
+BOT9 = Bot_t2(9,106,600,4000,1,24137,0);
+BOT10 = Bot_t2(10,106,600,4000,1,1948,0);
+BOT11 = Bot_t2(11,145,600,4000,1,2971,0);
+BOT12 = Bot_t2(12,118,600,4000,1,614,1);
+BOT13 = Bot_t2(13,123,600,4000,1,17180,0);
+BOT14 = Bot_t2(14,152,600,4000,1,22833,0);
+BOT15 = Bot_t2(15,147,600,4000,1,23145,0);
+BOT16 = Bot_t2(16,141,600,4000,1,10540,0);
+BOT17 = Bot_t2(17,154,600,4000,1,8596,0);
+BOT18 = Bot_t2(18,150,600,4000,1,21413,0);
+BOT19 = Bot_t2(19,160,600,4000,1,28638,0);
+BOT20 = Bot_t2(20,112,600,4000,1,2539,1);
+BOT21 = Bot_t2(21,149,600,4000,1,2751,0);
+BOT22 = Bot_t2(22,132,600,4000,1,14741,0);
+BOT23 = Bot_t2(23,143,600,4000,1,2661,1);
+BOT24 = Bot_t2(24,102,600,4000,1,3175,0);
+BOT25 = Bot_t2(25,129,600,4000,1,21874,0);
+BOT26 = Bot_t2(26,148,600,4000,1,29390,0);
+BOT27 = Bot_t2(27,140,600,4000,1,27743,0);
+BOT28 = Bot_t2(28,106,600,4000,1,3224,1);
+BOT29 = Bot_t2(29,128,600,4000,1,12921,0);
+BOT30 = Bot_t2(30,151,600,4000,1,14709,0);
+BOT31 = Bot_t2(31,139,600,4000,1,26280,0);
+BOT32 = Bot_t2(32,148,600,4000,1,9803,0);
+BOT33 = Bot_t2(33,153,600,4000,1,10215,0);
+BOT34 = Bot_t2(34,137,600,4000,1,18815,0);
+BOT35 = Bot_t2(35,160,600,4000,1,25764,0);
+BOT36 = Bot_t2(36,113,600,4000,1,13782,0);
+BOT37 = Bot_t2(37,154,600,4000,1,2795,1);
+BOT38 = Bot_t2(38,157,600,4000,1,21299,0);
+BOT39 = Bot_t2(39,140,600,4000,1,2722,1);
+BOT40 = Bot_t2(40,115,600,4000,1,18737,0);
+BOT41 = Bot_t2(41,138,600,4000,1,13638,0);
+BOT42 = Bot_t2(42,151,600,4000,1,26016,0);
+BOT43 = Bot_t2(43,138,600,4000,1,3528,0);
+BOT44 = Bot_t2(44,140,600,4000,1,224,1);
+BOT45 = Bot_t2(45,151,600,4000,1,16196,0);
+BOT46 = Bot_t2(46,118,600,4000,1,28593,0);
+BOT47 = Bot_t2(47,142,600,4000,1,15845,0);
+BOT48 = Bot_t2(48,159,600,4000,1,22083,0);
+BOT49 = Bot_t2(49,162,600,4000,1,18666,0);
+BOT50 = Bot_t2(50,108,600,4000,1,4603,0);
+BOT51 = Bot_t2(51,133,600,4000,1,1601,0);
+BOT52 = Bot_t2(52,142,600,4000,1,3155,0);
+BOT53 = Bot_t2(53,129,600,4000,1,3127,1);
+BOT54 = Bot_t2(54,126,600,4000,1,26612,0);
+BOT55 = Bot_t2(55,158,600,4000,1,11599,0);
+BOT56 = Bot_t2(56,115,600,4000,1,4739,0);
+BOT57 = Bot_t2(57,144,600,4000,1,864,0);
+BOT58 = Bot_t2(58,160,600,4000,1,6217,0);
+BOT59 = Bot_t2(59,152,600,4000,1,19987,0);
+BOT60 = Bot_t2(60,152,600,4000,1,2695,1);
+BOT61 = Bot_t2(61,146,600,4000,1,8300,0);
+BOT62 = Bot_t2(62,109,600,4000,1,8707,0);
+BOT63 = Bot_t2(63,140,600,4000,1,13492,0);
+BOT64 = Bot_t2(64,146,600,4000,1,1207,1);
+BOT65 = Bot_t2(65,118,600,4000,1,19276,0);
+BOT66 = Bot_t2(66,113,600,4000,1,2176,0);
+BOT67 = Bot_t2(67,156,600,4000,1,18792,0);
+BOT68 = Bot_t2(68,141,600,4000,1,30249,0);
+BOT69 = Bot_t2(69,127,600,4000,1,31578,0);
+BOT70 = Bot_t2(70,105,600,4000,1,20059,0);
+BOT71 = Bot_t2(71,149,600,4000,1,497,0);
+BOT72 = Bot_t2(72,160,600,4000,1,21174,0);
+BOT73 = Bot_t2(73,159,600,4000,1,8777,0);
+BOT74 = Bot_t2(74,111,600,4000,1,24989,0);
+BOT75 = Bot_t2(75,159,600,4000,1,18886,0);
+BOT76 = Bot_t2(76,120,600,4000,1,10235,0);
+BOT77 = Bot_t2(77,106,600,4000,1,11811,0);
+BOT78 = Bot_t2(78,159,600,4000,1,1173,0);
+BOT79 = Bot_t2(79,159,600,4000,1,31926,0);
+BOT80 = Bot_t2(80,125,600,4000,1,14909,0);
+BOT81 = Bot_t2(81,159,600,4000,1,28512,0);
+BOT82 = Bot_t2(82,114,600,4000,1,382,1);
+BOT83 = Bot_t2(83,108,600,4000,1,11229,0);
+BOT84 = Bot_t2(84,121,600,4000,1,15009,0);
+BOT85 = Bot_t2(85,148,600,4000,1,610,0);
+BOT86 = Bot_t2(86,126,600,4000,1,9945,0);
+BOT87 = Bot_t2(87,134,600,4000,1,23987,0);
+BOT88 = Bot_t2(88,129,600,4000,1,28928,0);
+BOT89 = Bot_t2(89,115,600,4000,1,26017,0);
+BOT90 = Bot_t2(90,109,600,4000,1,5739,0);
+BOT91 = Bot_t2(91,126,600,4000,1,12253,0);
+BOT92 = Bot_t2(92,155,600,4000,1,28290,0);
+BOT93 = Bot_t2(93,124,600,4000,1,31428,0);
+BOT94 = Bot_t2(94,133,600,4000,1,18426,0);
+BOT95 = Bot_t2(95,148,600,4000,1,23136,0);
+BOT96 = Bot_t2(96,122,600,4000,1,4590,0);
+BOT97 = Bot_t2(97,111,600,4000,1,8571,0);
+BOT98 = Bot_t2(98,110,600,4000,1,5887,0);
+BOT99 = Bot_t2(99,124,600,4000,1,31187,0);
+BOT100 = Bot_t2(100,127,600,4000,1,3044,1);
+BOT101 = Bot_t2(101,158,600,4000,1,6623,0);
+BOT102 = Bot_t2(102,133,600,4000,1,803,0);
+BOT103 = Bot_t2(103,152,600,4000,1,19031,0);
+BOT104 = Bot_t2(104,119,600,4000,1,28762,0);
+BOT105 = Bot_t2(105,108,600,4000,1,2134,1);
+BOT106 = Bot_t2(106,144,600,4000,1,7534,0);
+BOT107 = Bot_t2(107,159,600,4000,1,19019,0);
+BOT108 = Bot_t2(108,140,600,4000,1,31580,0);
+BOT109 = Bot_t2(109,152,600,4000,1,3941,1);
+BOT110 = Bot_t2(110,116,600,4000,1,1216,0);
+BOT111 = Bot_t2(111,124,600,4000,1,1334,1);
+BOT112 = Bot_t2(112,159,600,4000,1,20999,0);
+BOT113 = Bot_t2(113,123,600,4000,1,4174,0);
+BOT114 = Bot_t2(114,127,600,4000,1,1760,1);
+BOT115 = Bot_t2(115,104,600,4000,1,1354,1);
+BOT116 = Bot_t2(116,148,600,4000,1,30147,0);
+BOT117 = Bot_t2(117,117,600,4000,1,14204,0);
+BOT118 = Bot_t2(118,121,600,4000,1,6808,0);
+BOT119 = Bot_t2(119,108,600,4000,1,9014,0);
+BOT120 = Bot_t2(120,162,600,4000,1,23378,0);
+BOT121 = Bot_t2(121,152,600,4000,1,15235,0);
+BOT122 = Bot_t2(122,150,600,4000,1,12946,0);
+BOT123 = Bot_t2(123,151,600,4000,1,2692,0);
+BOT124 = Bot_t2(124,120,600,4000,1,866,0);
+BOT125 = Bot_t2(125,146,600,4000,1,5863,0);
+BOT126 = Bot_t2(126,162,600,4000,1,28145,0);
+BOT127 = Bot_t2(127,125,600,4000,1,31214,0);
+BOT128 = Bot_t2(128,115,600,4000,1,1564,1);
+BOT129 = Bot_t2(129,136,600,4000,1,3737,0);
+BOT130 = Bot_t2(130,123,600,4000,1,20638,0);
+BOT131 = Bot_t2(131,144,600,4000,1,721,0);
+BOT132 = Bot_t2(132,106,600,4000,1,4484,0);
+BOT133 = Bot_t2(133,145,600,4000,1,15193,0);
+BOT134 = Bot_t2(134,117,600,4000,1,2292,1);
+BOT135 = Bot_t2(135,125,600,4000,1,3271,1);
+BOT136 = Bot_t2(136,108,600,4000,1,9939,0);
+BOT137 = Bot_t2(137,107,600,4000,1,13738,0);
+BOT138 = Bot_t2(138,131,600,4000,1,24847,0);
+BOT139 = Bot_t2(139,133,600,4000,1,6606,0);
+BOT140 = Bot_t2(140,140,600,4000,1,3542,0);
+BOT141 = Bot_t2(141,125,600,4000,1,10431,0);
+BOT142 = Bot_t2(142,109,600,4000,1,2971,1);
+BOT143 = Bot_t2(143,126,600,4000,1,12515,0);
+BOT144 = Bot_t2(144,157,600,4000,1,6740,0);
+BOT145 = Bot_t2(145,102,600,4000,1,31974,0);
+BOT146 = Bot_t2(146,141,600,4000,1,23729,0);
+BOT147 = Bot_t2(147,112,600,4000,1,30748,0);
+BOT148 = Bot_t2(148,151,600,4000,1,19783,0);
+BOT149 = Bot_t2(149,157,600,4000,1,22446,0);
+BOT150 = Bot_t2(150,154,600,4000,1,21088,0);
+BOT151 = Bot_t2(151,146,600,4000,1,4220,0);
+BOT152 = Bot_t2(152,139,600,4000,1,19759,0);
+BOT153 = Bot_t2(153,111,600,4000,1,10631,0);
+BOT154 = Bot_t2(154,122,600,4000,1,28570,0);
+BOT155 = Bot_t2(155,145,600,4000,1,11413,0);
+BOT156 = Bot_t2(156,152,600,4000,1,8218,0);
+BOT157 = Bot_t2(157,153,600,4000,1,25099,0);
+BOT158 = Bot_t2(158,138,600,4000,1,19254,0);
+BOT159 = Bot_t2(159,116,600,4000,1,22510,0);
+BOT160 = Bot_t2(160,133,600,4000,1,13961,0);
+BOT161 = Bot_t2(161,122,600,4000,1,8985,0);
+BOT162 = Bot_t2(162,102,600,4000,1,25796,0);
+BOT163 = Bot_t2(163,122,600,4000,1,21647,0);
+BOT164 = Bot_t2(164,125,600,4000,1,12718,0);
+BOT165 = Bot_t2(165,121,600,4000,1,10861,0);
+BOT166 = Bot_t2(166,111,600,4000,1,5173,0);
+BOT167 = Bot_t2(167,152,600,4000,1,783,1);
+BOT168 = Bot_t2(168,149,600,4000,1,1120,1);
+BOT169 = Bot_t2(169,143,600,4000,1,31750,0);
+BOT170 = Bot_t2(170,114,600,4000,1,29707,0);
+BOT171 = Bot_t2(171,140,600,4000,1,5925,0);
+BOT172 = Bot_t2(172,115,600,4000,1,1375,1);
+BOT173 = Bot_t2(173,138,600,4000,1,29032,0);
+BOT174 = Bot_t2(174,122,600,4000,1,17213,0);
+BOT175 = Bot_t2(175,111,600,4000,1,16295,0);
+BOT176 = Bot_t2(176,104,600,4000,1,28647,0);
+BOT177 = Bot_t2(177,105,600,4000,1,342,0);
+BOT178 = Bot_t2(178,162,600,4000,1,7794,0);
+BOT179 = Bot_t2(179,139,600,4000,1,3956,1);
+BOT180 = Bot_t2(180,159,600,4000,1,3465,1);
+BOT181 = Bot_t2(181,131,600,4000,1,29385,0);
+BOT182 = Bot_t2(182,137,600,4000,1,18224,0);
+BOT183 = Bot_t2(183,135,600,4000,1,21178,0);
+BOT184 = Bot_t2(184,127,600,4000,1,19122,0);
+BOT185 = Bot_t2(185,150,600,4000,1,1495,1);
+BOT186 = Bot_t2(186,160,600,4000,1,27316,0);
+BOT187 = Bot_t2(187,152,600,4000,1,3506,1);
+BOT188 = Bot_t2(188,148,600,4000,1,2469,1);
+BOT189 = Bot_t2(189,128,600,4000,1,21432,0);
+BOT190 = Bot_t2(190,103,600,4000,1,31320,0);
+BOT191 = Bot_t2(191,152,600,4000,1,28877,0);
+BOT192 = Bot_t2(192,145,600,4000,1,30271,0);
+BOT193 = Bot_t2(193,145,600,4000,1,8335,0);
+BOT194 = Bot_t2(194,159,600,4000,1,6888,0);
+BOT195 = Bot_t2(195,117,600,4000,1,9481,0);
+BOT196 = Bot_t2(196,106,600,4000,1,31109,0);
+BOT197 = Bot_t2(197,114,600,4000,1,2000,1);
+BOT198 = Bot_t2(198,149,600,4000,1,30315,0);
+BOT199 = Bot_t2(199,131,600,4000,1,3159,0);
+BOT200 = Bot_t2(200,153,600,4000,1,11964,0);
+BOT201 = Bot_t2(201,111,600,4000,1,27150,0);
+BOT202 = Bot_t2(202,160,600,4000,1,26540,0);
+BOT203 = Bot_t2(203,134,600,4000,1,27788,0);
+BOT204 = Bot_t2(204,105,600,4000,1,21071,0);
+BOT205 = Bot_t2(205,110,600,4000,1,16714,0);
+BOT206 = Bot_t2(206,144,600,4000,1,550,1);
+BOT207 = Bot_t2(207,125,600,4000,1,23097,0);
+BOT208 = Bot_t2(208,114,600,4000,1,27414,0);
+BOT209 = Bot_t2(209,155,600,4000,1,21339,0);
+BOT210 = Bot_t2(210,147,600,4000,1,17692,0);
+BOT211 = Bot_t2(211,138,600,4000,1,7544,0);
+BOT212 = Bot_t2(212,116,600,4000,1,15896,0);
+BOT213 = Bot_t2(213,162,600,4000,1,16550,0);
+BOT214 = Bot_t2(214,138,600,4000,1,8798,0);
+BOT215 = Bot_t2(215,147,600,4000,1,5088,0);
+BOT216 = Bot_t2(216,159,600,4000,1,4035,0);
+BOT217 = Bot_t2(217,148,600,4000,1,1381,0);
+BOT218 = Bot_t2(218,152,600,4000,1,14654,0);
+BOT219 = Bot_t2(219,115,600,4000,1,19595,0);
+BOT220 = Bot_t2(220,118,600,4000,1,20291,0);
+BOT221 = Bot_t2(221,157,600,4000,1,27087,0);
+BOT222 = Bot_t2(222,123,600,4000,1,14423,0);
+BOT223 = Bot_t2(223,120,600,4000,1,17542,0);
+BOT224 = Bot_t2(224,148,600,4000,1,22029,0);
+BOT225 = Bot_t2(225,106,600,4000,1,3138,1);
+BOT226 = Bot_t2(226,133,600,4000,1,11177,0);
+BOT227 = Bot_t2(227,137,600,4000,1,6039,0);
+BOT228 = Bot_t2(228,158,600,4000,1,7980,0);
+BOT229 = Bot_t2(229,150,600,4000,1,8574,0);
+BOT230 = Bot_t2(230,146,600,4000,1,31569,0);
+BOT231 = Bot_t2(231,102,600,4000,1,1490,1);
+BOT232 = Bot_t2(232,129,600,4000,1,20105,0);
+BOT233 = Bot_t2(233,148,600,4000,1,31966,0);
+BOT234 = Bot_t2(234,109,600,4000,1,5173,0);
+BOT235 = Bot_t2(235,151,600,4000,1,21039,0);
+BOT236 = Bot_t2(236,103,600,4000,1,23501,0);
+BOT237 = Bot_t2(237,105,600,4000,1,16767,0);
+BOT238 = Bot_t2(238,113,600,4000,1,4039,0);
+BOT239 = Bot_t2(239,153,600,4000,1,9321,0);
+BOT240 = Bot_t2(240,150,600,4000,1,9586,0);
+BOT241 = Bot_t2(241,119,600,4000,1,22450,0);
+BOT242 = Bot_t2(242,154,600,4000,1,29816,0);
+BOT243 = Bot_t2(243,144,600,4000,1,8921,0);
+BOT244 = Bot_t2(244,137,600,4000,1,30621,0);
+BOT245 = Bot_t2(245,113,600,4000,1,957,1);
+BOT246 = Bot_t2(246,135,600,4000,1,1281,1);
+BOT247 = Bot_t2(247,115,600,4000,1,24402,0);
+BOT248 = Bot_t2(248,157,600,4000,1,114,0);
+BOT249 = Bot_t2(249,124,600,4000,1,803,0);
+BOT250 = Bot_t2(250,144,600,4000,1,29984,0);
+BOT251 = Bot_t2(251,140,600,4000,1,15803,0);
+BOT252 = Bot_t2(252,108,600,4000,1,28456,0);
+BOT253 = Bot_t2(253,137,600,4000,1,4144,0);
+BOT254 = Bot_t2(254,138,600,4000,1,22642,0);
+BOT255 = Bot_t2(255,101,600,4000,1,2128,0);
+BOT256 = Bot_t2(256,135,600,4000,1,10849,0);
+BOT257 = Bot_t2(257,130,600,4000,1,3854,0);
+BOT258 = Bot_t2(258,103,600,4000,1,6150,0);
+BOT259 = Bot_t2(259,143,600,4000,1,31349,0);
+BOT260 = Bot_t2(260,121,600,4000,1,446,1);
+BOT261 = Bot_t2(261,154,600,4000,1,7620,0);
+BOT262 = Bot_t2(262,145,600,4000,1,19742,0);
+BOT263 = Bot_t2(263,160,600,4000,1,2203,0);
+BOT264 = Bot_t2(264,161,600,4000,1,22827,0);
+BOT265 = Bot_t2(265,147,600,4000,1,16791,0);
+BOT266 = Bot_t2(266,115,600,4000,1,12408,0);
+BOT267 = Bot_t2(267,120,600,4000,1,7582,0);
+BOT268 = Bot_t2(268,106,600,4000,1,11765,0);
+BOT269 = Bot_t2(269,117,600,4000,1,20681,0);
+BOT270 = Bot_t2(270,120,600,4000,1,18615,0);
+BOT271 = Bot_t2(271,129,600,4000,1,22243,0);
+BOT272 = Bot_t2(272,130,600,4000,1,20556,0);
+BOT273 = Bot_t2(273,156,600,4000,1,21159,0);
+BOT274 = Bot_t2(274,137,600,4000,1,6900,0);
+BOT275 = Bot_t2(275,138,600,4000,1,20957,0);
+BOT276 = Bot_t2(276,112,600,4000,1,24355,0);
+BOT277 = Bot_t2(277,138,600,4000,1,16290,0);
+BOT278 = Bot_t2(278,135,600,4000,1,29380,0);
+BOT279 = Bot_t2(279,101,600,4000,1,28085,0);
+BOT280 = Bot_t2(280,156,600,4000,1,22995,0);
+BOT281 = Bot_t2(281,135,600,4000,1,6630,0);
+BOT282 = Bot_t2(282,106,600,4000,1,1694,1);
+BOT283 = Bot_t2(283,103,600,4000,1,3208,0);
+BOT284 = Bot_t2(284,122,600,4000,1,30802,0);
+BOT285 = Bot_t2(285,144,600,4000,1,5419,0);
+BOT286 = Bot_t2(286,148,600,4000,1,24087,0);
+BOT287 = Bot_t2(287,161,600,4000,1,18546,0);
+BOT288 = Bot_t2(288,125,600,4000,1,3486,1);
+BOT289 = Bot_t2(289,141,600,4000,1,3014,0);
+BOT290 = Bot_t2(290,119,600,4000,1,23948,0);
+BOT291 = Bot_t2(291,122,600,4000,1,206,0);
+BOT292 = Bot_t2(292,139,600,4000,1,22980,0);
+BOT293 = Bot_t2(293,158,600,4000,1,25992,0);
+BOT294 = Bot_t2(294,122,600,4000,1,8713,0);
+BOT295 = Bot_t2(295,108,600,4000,1,24228,0);
+BOT296 = Bot_t2(296,133,600,4000,1,5332,0);
+BOT297 = Bot_t2(297,153,600,4000,1,12099,0);
+BOT298 = Bot_t2(298,134,600,4000,1,24647,0);
+BOT299 = Bot_t2(299,131,600,4000,1,775,0);
+BOT300 = Bot_t2(300,133,600,4000,1,27389,0);
+BOT301 = Bot_t2(301,156,600,4000,1,3931,1);
+BOT302 = Bot_t2(302,119,600,4000,1,279,0);
+BOT303 = Bot_t2(303,131,600,4000,1,17668,0);
+BOT304 = Bot_t2(304,154,600,4000,1,7178,0);
+BOT305 = Bot_t2(305,145,600,4000,1,5645,0);
+BOT306 = Bot_t2(306,161,600,4000,1,3521,1);
+BOT307 = Bot_t2(307,162,600,4000,1,7162,0);
+BOT308 = Bot_t2(308,136,600,4000,1,20538,0);
+BOT309 = Bot_t2(309,124,600,4000,1,7808,0);
+BOT310 = Bot_t2(310,145,600,4000,1,1787,0);
+BOT311 = Bot_t2(311,157,600,4000,1,717,0);
+BOT312 = Bot_t2(312,102,600,4000,1,1309,1);
+BOT313 = Bot_t2(313,139,600,4000,1,3655,0);
+BOT314 = Bot_t2(314,130,600,4000,1,3747,1);
+BOT315 = Bot_t2(315,107,600,4000,1,4075,0);
+BOT316 = Bot_t2(316,153,600,4000,1,28059,0);
+BOT317 = Bot_t2(317,146,600,4000,1,14022,0);
+BOT318 = Bot_t2(318,107,600,4000,1,27986,0);
+BOT319 = Bot_t2(319,105,600,4000,1,6320,0);
+BOT320 = Bot_t2(320,111,600,4000,1,28395,0);
+BOT321 = Bot_t2(321,149,600,4000,1,5163,0);
+BOT322 = Bot_t2(322,148,600,4000,1,5547,0);
+BOT323 = Bot_t2(323,110,600,4000,1,2974,1);
+BOT324 = Bot_t2(324,155,600,4000,1,13110,0);
+BOT325 = Bot_t2(325,119,600,4000,1,5904,0);
+BOT326 = Bot_t2(326,144,600,4000,1,6432,0);
+BOT327 = Bot_t2(327,159,600,4000,1,12090,0);
+BOT328 = Bot_t2(328,137,600,4000,1,16826,0);
+BOT329 = Bot_t2(329,130,600,4000,1,31148,0);
+BOT330 = Bot_t2(330,125,600,4000,1,29066,0);
+BOT331 = Bot_t2(331,115,600,4000,1,17828,0);
+BOT332 = Bot_t2(332,138,600,4000,1,32,1);
+BOT333 = Bot_t2(333,151,600,4000,1,1533,0);
+BOT334 = Bot_t2(334,137,600,4000,1,740,0);
+BOT335 = Bot_t2(335,116,600,4000,1,902,0);
+BOT336 = Bot_t2(336,115,600,4000,1,695,1);
+BOT337 = Bot_t2(337,120,600,4000,1,24938,0);
+BOT338 = Bot_t2(338,151,600,4000,1,24471,0);
+BOT339 = Bot_t2(339,153,600,4000,1,22028,0);
+BOT340 = Bot_t2(340,128,600,4000,1,15313,0);
+BOT341 = Bot_t2(341,162,600,4000,1,2117,0);
+BOT342 = Bot_t2(342,102,600,4000,1,1528,1);
+BOT343 = Bot_t2(343,108,600,4000,1,28601,0);
+BOT344 = Bot_t2(344,141,600,4000,1,26173,0);
+BOT345 = Bot_t2(345,119,600,4000,1,4091,0);
+BOT346 = Bot_t2(346,126,600,4000,1,6772,0);
+BOT347 = Bot_t2(347,110,600,4000,1,26348,0);
+BOT348 = Bot_t2(348,117,600,4000,1,23373,0);
+BOT349 = Bot_t2(349,136,600,4000,1,7664,0);
+BOT350 = Bot_t2(350,145,600,4000,1,17050,0);
+BOT351 = Bot_t2(351,112,600,4000,1,26991,0);
+BOT352 = Bot_t2(352,143,600,4000,1,5587,0);
+BOT353 = Bot_t2(353,136,600,4000,1,305,1);
+BOT354 = Bot_t2(354,139,600,4000,1,1411,0);
+BOT355 = Bot_t2(355,101,600,4000,1,4020,0);
+BOT356 = Bot_t2(356,123,600,4000,1,24309,0);
+BOT357 = Bot_t2(357,133,600,4000,1,2121,0);
+BOT358 = Bot_t2(358,139,600,4000,1,11151,0);
+BOT359 = Bot_t2(359,141,600,4000,1,27874,0);
+BOT360 = Bot_t2(360,147,600,4000,1,2055,1);
+BOT361 = Bot_t2(361,105,600,4000,1,12868,0);
+BOT362 = Bot_t2(362,138,600,4000,1,9932,0);
+BOT363 = Bot_t2(363,140,600,4000,1,3312,1);
+BOT364 = Bot_t2(364,132,600,4000,1,12553,0);
+BOT365 = Bot_t2(365,157,600,4000,1,22823,0);
+BOT366 = Bot_t2(366,153,600,4000,1,15913,0);
+BOT367 = Bot_t2(367,144,600,4000,1,12032,0);
+BOT368 = Bot_t2(368,116,600,4000,1,29709,0);
+BOT369 = Bot_t2(369,131,600,4000,1,2808,0);
+BOT370 = Bot_t2(370,133,600,4000,1,3669,1);
+BOT371 = Bot_t2(371,137,600,4000,1,13030,0);
+BOT372 = Bot_t2(372,122,600,4000,1,31234,0);
+BOT373 = Bot_t2(373,105,600,4000,1,607,0);
+BOT374 = Bot_t2(374,130,600,4000,1,4785,0);
+BOT375 = Bot_t2(375,137,600,4000,1,22223,0);
+BOT376 = Bot_t2(376,122,600,4000,1,18798,0);
+BOT377 = Bot_t2(377,158,600,4000,1,3213,0);
+BOT378 = Bot_t2(378,155,600,4000,1,1954,0);
+BOT379 = Bot_t2(379,161,600,4000,1,25194,0);
+BOT380 = Bot_t2(380,161,600,4000,1,15010,0);
+BOT381 = Bot_t2(381,145,600,4000,1,25461,0);
+BOT382 = Bot_t2(382,118,600,4000,1,9707,0);
+BOT383 = Bot_t2(383,109,600,4000,1,10575,0);
+BOT384 = Bot_t2(384,101,600,4000,1,3321,1);
+BOT385 = Bot_t2(385,104,600,4000,1,12233,0);
+BOT386 = Bot_t2(386,155,600,4000,1,26982,0);
+BOT387 = Bot_t2(387,154,600,4000,1,25660,0);
+BOT388 = Bot_t2(388,102,600,4000,1,31610,0);
+BOT389 = Bot_t2(389,117,600,4000,1,31256,0);
+BOT390 = Bot_t2(390,151,600,4000,1,592,0);
+BOT391 = Bot_t2(391,147,600,4000,1,24379,0);
+BOT392 = Bot_t2(392,148,600,4000,1,8828,0);
+BOT393 = Bot_t2(393,131,600,4000,1,27072,0);
+BOT394 = Bot_t2(394,124,600,4000,1,18818,0);
+BOT395 = Bot_t2(395,120,600,4000,1,14615,0);
+BOT396 = Bot_t2(396,102,600,4000,1,2245,1);
+BOT397 = Bot_t2(397,128,600,4000,1,16292,0);
+BOT398 = Bot_t2(398,113,600,4000,1,14902,0);
+BOT399 = Bot_t2(399,119,600,4000,1,17009,0);
+BOT400 = Bot_t2(400,108,600,4000,1,3484,1);
+BOT401 = Bot_t2(401,112,600,4000,1,16279,0);
+BOT402 = Bot_t2(402,155,600,4000,1,4481,0);
+BOT403 = Bot_t2(403,128,600,4000,1,28548,0);
+BOT404 = Bot_t2(404,104,600,4000,1,25745,0);
+BOT405 = Bot_t2(405,142,600,4000,1,25331,0);
+BOT406 = Bot_t2(406,144,600,4000,1,6843,0);
+BOT407 = Bot_t2(407,127,600,4000,1,22154,0);
+BOT408 = Bot_t2(408,121,600,4000,1,4707,0);
+BOT409 = Bot_t2(409,141,600,4000,1,19147,0);
+BOT410 = Bot_t2(410,141,600,4000,1,14613,0);
+BOT411 = Bot_t2(411,141,600,4000,1,20647,0);
+BOT412 = Bot_t2(412,106,600,4000,1,11035,0);
+BOT413 = Bot_t2(413,149,600,4000,1,1166,0);
+BOT414 = Bot_t2(414,152,600,4000,1,25650,0);
+BOT415 = Bot_t2(415,116,600,4000,1,19276,0);
+BOT416 = Bot_t2(416,152,600,4000,1,9364,0);
+BOT417 = Bot_t2(417,114,600,4000,1,89,0);
+BOT418 = Bot_t2(418,136,600,4000,1,9612,0);
+BOT419 = Bot_t2(419,106,600,4000,1,26493,0);
+BOT420 = Bot_t2(420,128,600,4000,1,63,0);
+BOT421 = Bot_t2(421,149,600,4000,1,513,1);
+BOT422 = Bot_t2(422,158,600,4000,1,3983,1);
+BOT423 = Bot_t2(423,138,600,4000,1,27034,0);
+BOT424 = Bot_t2(424,135,600,4000,1,29344,0);
+BOT425 = Bot_t2(425,124,600,4000,1,28598,0);
+BOT426 = Bot_t2(426,158,600,4000,1,2123,0);
+BOT427 = Bot_t2(427,147,600,4000,1,20580,0);
+BOT428 = Bot_t2(428,122,600,4000,1,11013,0);
+BOT429 = Bot_t2(429,139,600,4000,1,31241,0);
+BOT430 = Bot_t2(430,129,600,4000,1,8440,0);
+BOT431 = Bot_t2(431,105,600,4000,1,1649,1);
+BOT432 = Bot_t2(432,158,600,4000,1,1834,0);
+BOT433 = Bot_t2(433,103,600,4000,1,13057,0);
+BOT434 = Bot_t2(434,101,600,4000,1,12233,0);
+BOT435 = Bot_t2(435,145,600,4000,1,28298,0);
+BOT436 = Bot_t2(436,161,600,4000,1,4939,0);
+BOT437 = Bot_t2(437,148,600,4000,1,25633,0);
+BOT438 = Bot_t2(438,113,600,4000,1,20377,0);
+BOT439 = Bot_t2(439,122,600,4000,1,18363,0);
+BOT440 = Bot_t2(440,144,600,4000,1,26668,0);
+BOT441 = Bot_t2(441,149,600,4000,1,4608,0);
+BOT442 = Bot_t2(442,110,600,4000,1,2232,0);
+BOT443 = Bot_t2(443,107,600,4000,1,28508,0);
+BOT444 = Bot_t2(444,104,600,4000,1,13172,0);
+BOT445 = Bot_t2(445,146,600,4000,1,29656,0);
+BOT446 = Bot_t2(446,139,600,4000,1,1964,1);
+BOT447 = Bot_t2(447,138,600,4000,1,16287,0);
+BOT448 = Bot_t2(448,145,600,4000,1,1905,1);
+BOT449 = Bot_t2(449,117,600,4000,1,15984,0);
+BOT450 = Bot_t2(450,118,600,4000,1,2449,0);
+BOT451 = Bot_t2(451,105,600,4000,1,26324,0);
+BOT452 = Bot_t2(452,155,600,4000,1,24452,0);
+BOT453 = Bot_t2(453,119,600,4000,1,13177,0);
+BOT454 = Bot_t2(454,111,600,4000,1,6840,0);
+BOT455 = Bot_t2(455,132,600,4000,1,25318,0);
+BOT456 = Bot_t2(456,133,600,4000,1,12819,0);
+BOT457 = Bot_t2(457,131,600,4000,1,29125,0);
+BOT458 = Bot_t2(458,121,600,4000,1,25287,0);
+BOT459 = Bot_t2(459,110,600,4000,1,7994,0);
+BOT460 = Bot_t2(460,132,600,4000,1,28643,0);
+BOT461 = Bot_t2(461,121,600,4000,1,23004,0);
+BOT462 = Bot_t2(462,154,600,4000,1,3896,1);
+BOT463 = Bot_t2(463,150,600,4000,1,19829,0);
+BOT464 = Bot_t2(464,152,600,4000,1,11865,0);
+BOT465 = Bot_t2(465,121,600,4000,1,21026,0);
+BOT466 = Bot_t2(466,139,600,4000,1,21464,0);
+BOT467 = Bot_t2(467,148,600,4000,1,19685,0);
+BOT468 = Bot_t2(468,102,600,4000,1,9580,0);
+BOT469 = Bot_t2(469,146,600,4000,1,26260,0);
+BOT470 = Bot_t2(470,136,600,4000,1,14396,0);
+BOT471 = Bot_t2(471,151,600,4000,1,21873,0);
+BOT472 = Bot_t2(472,134,600,4000,1,23413,0);
+BOT473 = Bot_t2(473,141,600,4000,1,2255,1);
+BOT474 = Bot_t2(474,117,600,4000,1,15395,0);
+BOT475 = Bot_t2(475,124,600,4000,1,9759,0);
+BOT476 = Bot_t2(476,102,600,4000,1,6460,0);
+BOT477 = Bot_t2(477,116,600,4000,1,25286,0);
+BOT478 = Bot_t2(478,114,600,4000,1,18668,0);
+BOT479 = Bot_t2(479,106,600,4000,1,15882,0);
+BOT480 = Bot_t2(480,119,600,4000,1,10265,0);
+BOT481 = Bot_t2(481,108,600,4000,1,9197,0);
+BOT482 = Bot_t2(482,159,600,4000,1,318,1);
+BOT483 = Bot_t2(483,126,600,4000,1,4443,0);
+BOT484 = Bot_t2(484,160,600,4000,1,18055,0);
+BOT485 = Bot_t2(485,155,600,4000,1,805,0);
+BOT486 = Bot_t2(486,120,600,4000,1,12013,0);
+BOT487 = Bot_t2(487,123,600,4000,1,2072,1);
+BOT488 = Bot_t2(488,146,600,4000,1,27110,0);
+BOT489 = Bot_t2(489,159,600,4000,1,517,0);
+BOT490 = Bot_t2(490,106,600,4000,1,12531,0);
+BOT491 = Bot_t2(491,122,600,4000,1,25211,0);
+BOT492 = Bot_t2(492,113,600,4000,1,27201,0);
+BOT493 = Bot_t2(493,151,600,4000,1,29506,0);
+BOT494 = Bot_t2(494,106,600,4000,1,17259,0);
+BOT495 = Bot_t2(495,130,600,4000,1,12290,0);
+BOT496 = Bot_t2(496,125,600,4000,1,3938,1);
+BOT497 = Bot_t2(497,109,600,4000,1,7592,0);
+BOT498 = Bot_t2(498,102,600,4000,1,3467,0);
+BOT499 = Bot_t2(499,128,600,4000,1,19352,0);
+BOT500 = Bot_t2(500,125,600,4000,1,1376,1);
+system CNC, BM, RPT, LDR, BOT_DF, BOT1, BOT2, BOT3, BOT4, BOT5, BOT6, BOT7, BOT8, BOT9, BOT10, BOT11, BOT12, BOT13, BOT14, BOT15, BOT16, BOT17, BOT18, BOT19, BOT20, BOT21, BOT22, BOT23, BOT24, BOT25, BOT26, BOT27, BOT28, BOT29, BOT30, BOT31, BOT32, BOT33, BOT34, BOT35, BOT36, BOT37, BOT38, BOT39, BOT40, BOT41, BOT42, BOT43, BOT44, BOT45, BOT46, BOT47, BOT48, BOT49, BOT50, BOT51, BOT52, BOT53, BOT54, BOT55, BOT56, BOT57, BOT58, BOT59, BOT60, BOT61, BOT62, BOT63, BOT64, BOT65, BOT66, BOT67, BOT68, BOT69, BOT70, BOT71, BOT72, BOT73, BOT74, BOT75, BOT76, BOT77, BOT78, BOT79, BOT80, BOT81, BOT82, BOT83, BOT84, BOT85, BOT86, BOT87, BOT88, BOT89, BOT90, BOT91, BOT92, BOT93, BOT94, BOT95, BOT96, BOT97, BOT98, BOT99, BOT100, BOT101, BOT102, BOT103, BOT104, BOT105, BOT106, BOT107, BOT108, BOT109, BOT110, BOT111, BOT112, BOT113, BOT114, BOT115, BOT116, BOT117, BOT118, BOT119, BOT120, BOT121, BOT122, BOT123, BOT124, BOT125, BOT126, BOT127, BOT128, BOT129, BOT130, BOT131, BOT132, BOT133, BOT134, BOT135, BOT136, BOT137, BOT138, BOT139, BOT140, BOT141, BOT142, BOT143, BOT144, BOT145, BOT146, BOT147, BOT148, BOT149, BOT150, BOT151, BOT152, BOT153, BOT154, BOT155, BOT156, BOT157, BOT158, BOT159, BOT160, BOT161, BOT162, BOT163, BOT164, BOT165, BOT166, BOT167, BOT168, BOT169, BOT170, BOT171, BOT172, BOT173, BOT174, BOT175, BOT176, BOT177, BOT178, BOT179, BOT180, BOT181, BOT182, BOT183, BOT184, BOT185, BOT186, BOT187, BOT188, BOT189, BOT190, BOT191, BOT192, BOT193, BOT194, BOT195, BOT196, BOT197, BOT198, BOT199, BOT200, BOT201, BOT202, BOT203, BOT204, BOT205, BOT206, BOT207, BOT208, BOT209, BOT210, BOT211, BOT212, BOT213, BOT214, BOT215, BOT216, BOT217, BOT218, BOT219, BOT220, BOT221, BOT222, BOT223, BOT224, BOT225, BOT226, BOT227, BOT228, BOT229, BOT230, BOT231, BOT232, BOT233, BOT234, BOT235, BOT236, BOT237, BOT238, BOT239, BOT240, BOT241, BOT242, BOT243, BOT244, BOT245, BOT246, BOT247, BOT248, BOT249, BOT250, BOT251, BOT252, BOT253, BOT254, BOT255, BOT256, BOT257, BOT258, BOT259, BOT260, BOT261, BOT262, BOT263, BOT264, BOT265, BOT266, BOT267, BOT268, BOT269, BOT270, BOT271, BOT272, BOT273, BOT274, BOT275, BOT276, BOT277, BOT278, BOT279, BOT280, BOT281, BOT282, BOT283, BOT284, BOT285, BOT286, BOT287, BOT288, BOT289, BOT290, BOT291, BOT292, BOT293, BOT294, BOT295, BOT296, BOT297, BOT298, BOT299, BOT300, BOT301, BOT302, BOT303, BOT304, BOT305, BOT306, BOT307, BOT308, BOT309, BOT310, BOT311, BOT312, BOT313, BOT314, BOT315, BOT316, BOT317, BOT318, BOT319, BOT320, BOT321, BOT322, BOT323, BOT324, BOT325, BOT326, BOT327, BOT328, BOT329, BOT330, BOT331, BOT332, BOT333, BOT334, BOT335, BOT336, BOT337, BOT338, BOT339, BOT340, BOT341, BOT342, BOT343, BOT344, BOT345, BOT346, BOT347, BOT348, BOT349, BOT350, BOT351, BOT352, BOT353, BOT354, BOT355, BOT356, BOT357, BOT358, BOT359, BOT360, BOT361, BOT362, BOT363, BOT364, BOT365, BOT366, BOT367, BOT368, BOT369, BOT370, BOT371, BOT372, BOT373, BOT374, BOT375, BOT376, BOT377, BOT378, BOT379, BOT380, BOT381, BOT382, BOT383, BOT384, BOT385, BOT386, BOT387, BOT388, BOT389, BOT390, BOT391, BOT392, BOT393, BOT394, BOT395, BOT396, BOT397, BOT398, BOT399, BOT400, BOT401, BOT402, BOT403, BOT404, BOT405, BOT406, BOT407, BOT408, BOT409, BOT410, BOT411, BOT412, BOT413, BOT414, BOT415, BOT416, BOT417, BOT418, BOT419, BOT420, BOT421, BOT422, BOT423, BOT424, BOT425, BOT426, BOT427, BOT428, BOT429, BOT430, BOT431, BOT432, BOT433, BOT434, BOT435, BOT436, BOT437, BOT438, BOT439, BOT440, BOT441, BOT442, BOT443, BOT444, BOT445, BOT446, BOT447, BOT448, BOT449, BOT450, BOT451, BOT452, BOT453, BOT454, BOT455, BOT456, BOT457, BOT458, BOT459, BOT460, BOT461, BOT462, BOT463, BOT464, BOT465, BOT466, BOT467, BOT468, BOT469, BOT470, BOT471, BOT472, BOT473, BOT474, BOT475, BOT476, BOT477, BOT478, BOT479, BOT480, BOT481, BOT482, BOT483, BOT484, BOT485, BOT486, BOT487, BOT488, BOT489, BOT490, BOT491, BOT492, BOT493, BOT494, BOT495, BOT496, BOT497, BOT498, BOT499, BOT500;
+</system>
+	<queries>
+		<query>
+			<formula>A[] total_time==50 imply current_number_bots+==total_devices-1</formula>
+			<comment></comment>
+		</query>
+		<query>
+			<formula>E&lt;&gt; current_number_bots==total_devices-1</formula>
+			<comment></comment>
+		</query>
+		<query>
+			<formula>E&lt;&gt; total_time == 5
+</formula>
+			<comment></comment>
+		</query>
+		<query>
+			<formula></formula>
+			<comment></comment>
+		</query>
+		<query>
+			<formula>Pr[&lt;=500] (&lt;&gt;current_number_bots==5)</formula>
+			<comment></comment>
+		</query>
+		<query>
+			<formula>Pr[&lt;=50] (&lt;&gt;current_number_bots==5)</formula>
+			<comment></comment>
+		</query>
+		<query>
+			<formula>Pr[&lt;=25] (&lt;&gt;current_number_bots==5)</formula>
+			<comment></comment>
+		</query>
+		<query>
+			<formula>simulate[&lt;=500; 15] {BOT_DF.Telnet_Port_Scan, BOT_DF.Victim_Found}</formula>
+			<comment></comment>
+		</query>
+		<query>
+			<formula>simulate[&lt;=50] {in_botnet[1]}</formula>
+			<comment></comment>
+		</query>
+		<query>
+			<formula>Pr[&lt;=25] (&lt;&gt;in_botnet[1])</formula>
+			<comment></comment>
+		</query>
+		<query>
+			<formula>Pr[&lt;=25] (&lt;&gt;in_botnet[1] &amp;&amp; in_botnet[2])</formula>
+			<comment></comment>
+		</query>
+		<query>
+			<formula>Pr[&lt;=25] (&lt;&gt;in_botnet[1] &amp;&amp; in_botnet[2] &amp;&amp; in_botnet[3])</formula>
+			<comment></comment>
+		</query>
+		<query>
+			<formula></formula>
+			<comment></comment>
+		</query>
+		<query>
+			<formula>Pr[&lt;=25] (&lt;&gt;current_number_bots==1)</formula>
+			<comment></comment>
+		</query>
+		<query>
+			<formula>Pr[&lt;=25] (&lt;&gt;current_number_bots==2)</formula>
+			<comment></comment>
+		</query>
+		<query>
+			<formula>Pr[&lt;=25] (&lt;&gt;current_number_bots==3)</formula>
+			<comment></comment>
+		</query>
+		<query>
+			<formula>Pr[&lt;=25; 500] (&lt;&gt;current_number_bots==4)</formula>
+			<comment></comment>
+		</query>
+		<query>
+			<formula>Pr[&lt;=25] (&lt;&gt;current_number_bots==5)</formula>
+			<comment></comment>
+		</query>
+		<query>
+			<formula></formula>
+			<comment></comment>
+		</query>
+		<query>
+			<formula></formula>
+			<comment></comment>
+		</query>
+		<query>
+			<formula>&lt;----- MODEL VERIFICATION -----&gt;</formula>
+			<comment></comment>
+		</query>
+		<query>
+			<formula>A[] !deadlock</formula>
+			<comment>Deadlocks never occur</comment>
+		</query>
+		<query>
+			<formula>A[] deadlock imply current_number_bots==total_devices-1</formula>
+			<comment>A deadlock implies that all devices have been infected</comment>
+		</query>
+		<query>
+			<formula></formula>
+			<comment></comment>
+		</query>
+		<query>
+			<formula>&lt;----- INFECTION REACHABILITY -----&gt;</formula>
+			<comment></comment>
+		</query>
+		<query>
+			<formula>A&lt;&gt; current_number_bots==total_devices-1</formula>
+			<comment>All devices will always be infected in every possible scenario</comment>
+		</query>
+		<query>
+			<formula>E&lt;&gt; current_number_bots==total_devices-1</formula>
+			<comment>It is possible for every device to eventually be infected</comment>
+		</query>
+		<query>
+			<formula></formula>
+			<comment></comment>
+		</query>
+		<query>
+			<formula>&lt;----- INFECTION TIMES -----&gt;</formula>
+			<comment></comment>
+		</query>
+		<query>
+			<formula>A[] total_time==50 imply current_number_bots==total_devices-1</formula>
+			<comment>All devices are always infected by 50 time units</comment>
+		</query>
+		<query>
+			<formula>Pr[total_time&lt;=100; 100] (&lt;&gt;current_number_bots==total_devices-1)</formula>
+			<comment>The probability all devices are compromised in 100 time units</comment>
+		</query>
+		<query>
+			<formula>Pr[total_time&lt;=50] (&lt;&gt;current_number_bots==total_devices-1)</formula>
+			<comment>The probability all devices are compromised in 50 time units</comment>
+		</query>
+		<query>
+			<formula>Pr[total_time&lt;=25] (&lt;&gt;current_number_bots==total_devices-1)</formula>
+			<comment>The probability all devices are compromised in 25 time units</comment>
+		</query>
+		<query>
+			<formula>E [total_time&lt;=10; 100] (max: current_number_bots)</formula>
+			<comment>The expected number of compromised devices in 10 time units (generated with 100 simulation runs)</comment>
+		</query>
+		<query>
+			<formula>E [total_time&lt;=20; 100] (max: current_number_bots)</formula>
+			<comment>The expected number of compromised devices in 20 time units (generated with 100 simulation runs)</comment>
+		</query>
+		<query>
+			<formula>E [total_time&lt;=25; 100] (max: current_number_bots)</formula>
+			<comment>The expected number of compromised devices in 25 time units (generated with 100 simulation runs)</comment>
+		</query>
+		<query>
+			<formula>E [total_time&lt;=30; 100] (max: current_number_bots)</formula>
+			<comment>The expected number of compromised devices in 30 time units (generated with 100 simulation runs)</comment>
+		</query>
+		<query>
+			<formula>E [total_time&lt;=40; 100] (max: current_number_bots)</formula>
+			<comment>The expected number of compromised devices in 40 time units (generated with 100 simulation runs)</comment>
+		</query>
+		<query>
+			<formula>E [total_time&lt;=50; 100] (max: current_number_bots)</formula>
+			<comment>The expected number of compromised devices in 50 time units (generated with 100 simulation runs)</comment>
+		</query>
+		<query>
+			<formula>E [total_time&lt;=60; 100] (max: current_number_bots)</formula>
+			<comment>The expected number of compromised devices in 60 time units (generated with 100 simulation runs)</comment>
+		</query>
+		<query>
+			<formula>E [total_time&lt;=70; 100] (max: current_number_bots)</formula>
+			<comment>The expected number of compromised devices in 70 time units (generated with 100 simulation runs)</comment>
+		</query>
+		<query>
+			<formula>E [total_time&lt;=80; 100] (max: current_number_bots)</formula>
+			<comment>The expected number of compromised devices in 80 time units (generated with 100 simulation runs)</comment>
+		</query>
+		<query>
+			<formula>E [total_time&lt;=90; 100] (max: current_number_bots)</formula>
+			<comment>The expected number of compromised devices in 90 time units (generated with 100 simulation runs)</comment>
+		</query>
+		<query>
+			<formula>E [total_time&lt;=100; 100] (max: current_number_bots)</formula>
+			<comment>The expected number of compromised devices in 100 time units (generated with 100 simulation runs)</comment>
+		</query>
+		<query>
+			<formula>Pr[&lt;=50] (&lt;&gt;in_botnet[1])</formula>
+			<comment>The probability bot 1 has been infected by 50 time units</comment>
+		</query>
+		<query>
+			<formula>Pr[&lt;=50] (&lt;&gt;in_botnet[2])</formula>
+			<comment>The probability bot 2 has been infected by 50 time units</comment>
+		</query>
+		<query>
+			<formula>Pr[&lt;=50] (&lt;&gt;in_botnet[3])</formula>
+			<comment>The probability bot 3 has been infected by 50 time units</comment>
+		</query>
+		<query>
+			<formula>Pr[&lt;=50] (&lt;&gt;in_botnet[4])</formula>
+			<comment>The probability bot 4 has been infected by 50 time units</comment>
+		</query>
+		<query>
+			<formula>Pr[&lt;=50] (&lt;&gt;in_botnet[5])</formula>
+			<comment>The probability bot 5 has been infected by 50 time units</comment>
+		</query>
+		<query>
+			<formula>Pr[&lt;=25] (&lt;&gt;in_botnet[1])</formula>
+			<comment>The probability bot 1 has been infected by 25 time units</comment>
+		</query>
+		<query>
+			<formula>Pr[&lt;=25] (&lt;&gt;in_botnet[1] &amp;&amp; in_botnet[2])</formula>
+			<comment>The probability bots 1 and 2 have been infected by 25 time units</comment>
+		</query>
+		<query>
+			<formula>Pr[&lt;=25] (&lt;&gt;in_botnet[1] &amp;&amp; in_botnet[2] &amp;&amp; in_botnet[3])</formula>
+			<comment>The probability bots 1, 2 , and 3 have been infected by 25 time units</comment>
+		</query>
+		<query>
+			<formula>Pr[&lt;=1000] (&lt;&gt;current_number_bots == 5)</formula>
+			<comment></comment>
+		</query>
+		<query>
+			<formula>simulate [total_time&lt;=1000; 1] {current_number_bots}</formula>
+			<comment></comment>
+		</query>
+		<query>
+			<formula>simulate [total_time&lt;=2000; 1] {current_number_bots}</formula>
+			<comment></comment>
+		</query>
+		<query>
+			<formula>simulate [total_time&lt;=10000; 1] {current_number_bots}</formula>
+			<comment></comment>
+		</query>
+		<query>
+			<formula>simulate [total_time&lt;=50000; 1] {current_number_bots}</formula>
+			<comment>simulate 100 runs for 100 time units each and plot the number of infected bots against simulation time</comment>
+		</query>
+		<query>
+			<formula>simulate [total_time&lt;=100; 100] {in_botnet[1], in_botnet[2], in_botnet[3], in_botnet[4], in_botnet[5]}</formula>
+			<comment>simulate 100 runs for 100 time units each and plot when each bot becomes infected</comment>
+		</query>
+		<query>
+			<formula></formula>
+			<comment></comment>
+		</query>
+		<query>
+			<formula>&lt;----- Network Traffic -----&gt;</formula>
+			<comment></comment>
+		</query>
+		<query>
+			<formula>Pr[&lt;=32] (&lt;&gt; total_messages&gt;75)</formula>
+			<comment>Probability that at least 75 messages are sent over the network in 32 time units (which is the expected time the infect all 5 devices)</comment>
+		</query>
+		<query>
+			<formula>simulate [total_time&lt;=100; 100] {total_scans, total_attempts} : current_number_bots==total_devices-1</formula>
+			<comment>Simulate 100 runs for either 100 time units, or until every bot is infected, and plot the number of network scans and login attempts</comment>
+		</query>
+		<query>
+			<formula></formula>
+			<comment></comment>
+		</query>
+		<query>
+			<formula></formula>
+			<comment></comment>
+		</query>
+		<query>
+			<formula></formula>
+			<comment></comment>
+		</query>
+		<query>
+			<formula>simulate [total_time&lt;=5000; 1] {BOT9.Rebooting}</formula>
+			<comment></comment>
+		</query>
+		<query>
+			<formula>simulate [total_time&lt;=5000; 5] {current_number_bots} : current_number_bots==total_devices-1</formula>
+			<comment></comment>
+		</query>
+		<query>
+			<formula>BOT1.Vulnerable --&gt; BOT1.Telnet_Port_Scan</formula>
+			<comment></comment>
+		</query>
+	</queries>
+</nta>
