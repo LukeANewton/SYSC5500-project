@@ -56,22 +56,24 @@ def run_query(num_devices, proportion_always_on, reboot_length, reboot_period, m
 
 
 # all always-connected devices on a fixed-delay network
-run_query(2000, 1, 600, 36000, 'model-fixed-speed.xml', True, 864000)
+#run_query(2000, 1, 600, 36000, 'model-fixed-speed.xml', True, 864000)
 
 # all rebooting devices for different reboot periods on a fixed-delay network (100ms)
-fixed_speed_queries = [{REBOOT_LENGTH:600, REBOOT_PERIOD:36000},		
-			{REBOOT_LENGTH:600, REBOOT_PERIOD:18000},
-			{REBOOT_LENGTH:600, REBOOT_PERIOD:6000},
-			{REBOOT_LENGTH:600, REBOOT_PERIOD:3000},
-			{REBOOT_LENGTH:600, REBOOT_PERIOD:864000}]
+#fixed_speed_queries = [{REBOOT_LENGTH:600, REBOOT_PERIOD:36000},		
+#			{REBOOT_LENGTH:600, REBOOT_PERIOD:18000},
+#			{REBOOT_LENGTH:600, REBOOT_PERIOD:6000},
+#			{REBOOT_LENGTH:600, REBOOT_PERIOD:3000},
+#			{REBOOT_LENGTH:600, REBOOT_PERIOD:864000}]
+fixed_speed_queries = [{REBOOT_LENGTH:600, REBOOT_PERIOD:864000}]
 for query in fixed_speed_queries:
 	run_query(500, 0, query[REBOOT_LENGTH], query[REBOOT_PERIOD], 'model-fixed-speed.xml', False, 2*query[REBOOT_PERIOD])
 	
-# all rebooting devices for different reboot periods on a variable-delay network (0ms to 250ms
-variable_speed_queries = [{REBOOT_LENGTH:240, REBOOT_PERIOD:14400},		
-			{REBOOT_LENGTH:240, REBOOT_PERIOD:7200},
-			{REBOOT_LENGTH:240, REBOOT_PERIOD:2400},
-			{REBOOT_LENGTH:240, REBOOT_PERIOD:1200},
-			{REBOOT_LENGTH:240, REBOOT_PERIOD:345600}]
-for query in fixed_speed_queries:
-	run_query(500, 0, query[REBOOT_LENGTH], query[REBOOT_PERIOD], 'variable_speed_queries.xml', False, 2*query[REBOOT_PERIOD])
+# all rebooting devices for different reboot periods on a variable-delay network (0ms to 250ms)
+#variable_speed_queries = [{REBOOT_LENGTH:240, REBOOT_PERIOD:14400},		
+#			{REBOOT_LENGTH:240, REBOOT_PERIOD:7200},
+#			{REBOOT_LENGTH:240, REBOOT_PERIOD:2400},
+#			{REBOOT_LENGTH:240, REBOOT_PERIOD:1200},
+#			{REBOOT_LENGTH:240, REBOOT_PERIOD:345600}]
+variable_speed_queries = [{REBOOT_LENGTH:240, REBOOT_PERIOD:345600}]
+for query in variable_speed_queries:
+	run_query(500, 0, query[REBOOT_LENGTH], query[REBOOT_PERIOD], 'model-variable-speed.xml', False, 2*query[REBOOT_PERIOD])
