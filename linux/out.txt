@@ -1,2 +1,0 @@
-running: ./verifier/verifyta -o 2 -C -S 3 -O csv '100_devices_with_1_peiodicaly_rebooting_every_36000_time_units_2021-06-28_14:15:49.035548/model-no-reboot-clock.xml' '100_devices_with_1_peiodicaly_rebooting_every_36000_time_units_2021-06-28_14:15:49.035548/query.q'
---- 0.3511962890625 seconds ---
