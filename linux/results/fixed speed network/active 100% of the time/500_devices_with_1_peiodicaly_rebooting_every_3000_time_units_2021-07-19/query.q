@@ -1,0 +1,1 @@
+simulate [total_time<=6000; 1] {current_number_bots, 2*((attempt_loops+scan_loops)*LIMIT + total_attempts + total_scans)}

@@ -9,6 +9,7 @@ NUMBER_DEVICES = 'number devices'
 PROPORTION_ALWAYS_ON = 'proportion always on'  
 REBOOT_LENGTH = 'reboot length'
 REBOOT_PERIOD = 'reboot period'
+PROPORTION_TIME_ACTIVE = 'time active'
 MODEL_NAME = 'model_name'
 STOP_WHEN_ALL_INFECTED = 'stop if all infected' 
 SIMULATION_TIME = 'simulation time'    
@@ -18,16 +19,19 @@ NUMBER_CREDENTIALS = 62
 SIMULATION_RUNS = 1
 
 
-def run_query(num_devices, proportion_always_on, reboot_length, reboot_period, model_name, stop_if_all_infected, simulation_time):
+def run_query(num_devices, proportion_always_on, reboot_length, reboot_period, proportion_of_time_active, model_name, stop_if_all_infected, simulation_time):
 	print('Starting experiment with:')
 	print('\t', str(num_devices), 'devices')
 	print('\t', str((1-proportion_always_on)*100), '% of devices rebooting')
+	print('\t bots spend', str((1-proportion_of_time_active)*100), '% of time spent hibernating')
 	print('\t', 'a reboot period of', str(reboot_period), 'time units')
 	print('\t', 'a reboot length of', str(reboot_length), 'time units')
 	print('\t', 'simulating', str(simulation_time), 'time units')
 
 	# call the python helper file to edit model system declaration
-	set_num_devices(num_devices, proportion_always_on, 1-proportion_always_on, reboot_length, reboot_period,
+	set_num_devices(num_devices, proportion_always_on, 1-proportion_always_on, 
+			int(max(reboot_length*proportion_of_time_active, 1)), 
+			int(max(reboot_period*proportion_of_time_active, 1)),
 			NUMBER_CREDENTIALS, model_name)
 
 	# make a folder to move all output CSVs, along with a copy of the model and query used
@@ -59,14 +63,13 @@ def run_query(num_devices, proportion_always_on, reboot_length, reboot_period, m
 #run_query(2000, 1, 600, 36000, 'model-fixed-speed.xml', True, 864000)
 
 # all rebooting devices for different reboot periods on a fixed-delay network (100ms)
-#fixed_speed_queries = [{REBOOT_LENGTH:600, REBOOT_PERIOD:36000},		
-#			{REBOOT_LENGTH:600, REBOOT_PERIOD:18000},
-#			{REBOOT_LENGTH:600, REBOOT_PERIOD:6000},
-#			{REBOOT_LENGTH:600, REBOOT_PERIOD:3000},
+fixed_speed_queries = [{REBOOT_LENGTH:600, REBOOT_PERIOD:36000, PROPORTION_TIME_ACTIVE:0.5},		
+			{REBOOT_LENGTH:600, REBOOT_PERIOD:18000, PROPORTION_TIME_ACTIVE:0.5},
+			{REBOOT_LENGTH:600, REBOOT_PERIOD:6000, PROPORTION_TIME_ACTIVE:0.5},
+			{REBOOT_LENGTH:600, REBOOT_PERIOD:3000, PROPORTION_TIME_ACTIVE:0.5}]#,
 #			{REBOOT_LENGTH:600, REBOOT_PERIOD:864000}]
-fixed_speed_queries = [{REBOOT_LENGTH:600, REBOOT_PERIOD:864000}]
 for query in fixed_speed_queries:
-	run_query(500, 0, query[REBOOT_LENGTH], query[REBOOT_PERIOD], 'model-fixed-speed.xml', False, 2*query[REBOOT_PERIOD])
+	run_query(500, 0, query[REBOOT_LENGTH], query[REBOOT_PERIOD], query[PROPORTION_TIME_ACTIVE], 'model-fixed-speed.xml', False, 2*query[REBOOT_PERIOD])
 	
 # all rebooting devices for different reboot periods on a variable-delay network (0ms to 250ms)
 #variable_speed_queries = [{REBOOT_LENGTH:240, REBOOT_PERIOD:14400},		
@@ -74,6 +77,6 @@ for query in fixed_speed_queries:
 #			{REBOOT_LENGTH:240, REBOOT_PERIOD:2400},
 #			{REBOOT_LENGTH:240, REBOOT_PERIOD:1200},
 #			{REBOOT_LENGTH:240, REBOOT_PERIOD:345600}]
-variable_speed_queries = [{REBOOT_LENGTH:240, REBOOT_PERIOD:345600}]
+variable_speed_queries = []#[{REBOOT_LENGTH:240, REBOOT_PERIOD:345600}]
 for query in variable_speed_queries:
 	run_query(500, 0, query[REBOOT_LENGTH], query[REBOOT_PERIOD], 'model-variable-speed.xml', False, 2*query[REBOOT_PERIOD])
