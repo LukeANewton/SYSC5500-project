@@ -1,0 +1,11 @@
+[{"query name": "messages-and-bot-size.q",
+		"model name": "model-fixed-speed.xml",
+		"number credentials": 62,
+		"simulation runs": 1,
+		"number devces": 200,
+		"proportion always on": 1,
+		"proportion time active": 1,
+		"simulation time": 7200,
+		"stop if all infected": "True"}
+
+]
